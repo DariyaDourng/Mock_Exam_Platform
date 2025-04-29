@@ -6,7 +6,7 @@ const Footer = () => {
 <div>
   
       {/* Footer Section */}
-      <footer className="bg-white py-8 border-t-2">
+      <footer className="bg-white py-8 ">
         <div className="text-center">
           <p className="text-gray-600 text-sm">© Online Exam, Inc. 2025. We love our users!</p>
         </div>
