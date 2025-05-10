@@ -1,23 +1,35 @@
 'use client';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation'; // ✅ Step 1
 
 const Login: React.FC = () => {
+  const router = useRouter(); // ✅ Step 2
   const [form, setForm] = useState({
     email: '',
     password: '',
+    rememberMe: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, rememberMe: e.target.checked });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Login submitted:', form);
-    // You can add API login request here
+    const router = useRouter();
+    // after successful login
+    // Fake login logic (replace with your real API call)
+    // await fetch('/api/login', ...)
     alert('Logged in!');
+    router.push('/sidebar'); // ✅ Step 3
   };
 
   return (
@@ -28,9 +40,10 @@ const Login: React.FC = () => {
           <h2 className="text-3xl font-bold text-center text-indigo-600 mb-2">Welcome back!</h2>
           <h3 className="text-xl font-bold text-center mb-8">Login to your account here</h3>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+                Email address <span className='text-red-500'>*</span>
               </label>
               <input
                 type="email"
@@ -39,13 +52,14 @@ const Login: React.FC = () => {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
 
+            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                Password <span className='text-red-500'>*</span>
               </label>
               <input
                 type="password"
@@ -54,10 +68,31 @@ const Login: React.FC = () => {
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
 
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="rememberMe"
+                  id="rememberMe"
+                  checked={form.rememberMe}
+                  onChange={handleCheckboxChange}
+                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                />
+                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-600">
+                  Remember me
+                </label>
+              </div>
+              <Link href="/forgot-password" className="text-sm text-indigo-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+
+            {/* Submit Button */}
             <div>
               <button
                 type="submit"
@@ -69,7 +104,7 @@ const Login: React.FC = () => {
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="text-indigo-600 hover:underline">
               Sign Up
             </Link>
