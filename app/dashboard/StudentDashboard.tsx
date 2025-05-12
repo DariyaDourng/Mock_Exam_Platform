@@ -224,7 +224,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Notifications */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           {notifications.map((notification) => (
             <Alert key={notification.id} variant={notification.type === "warning" ? "destructive" : "default"}>
               <div className="flex items-start">
@@ -236,7 +236,7 @@ export default function StudentDashboard() {
               </div>
             </Alert>
           ))}
-        </div>
+        </div> */}
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>

@@ -166,7 +166,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        <Progress value={progress} className="h-2" />
+        <Progress value={progress} className="h-2 " />
 
         {testSubmitted ? (
           <Card className="mt-8">
@@ -211,7 +211,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
               </Button>
               <div className="flex gap-2">
                 {currentQuestion === testData.questions.length - 1 ? (
-                  <Button onClick={handleSubmitTest} disabled={Object.keys(answers).length < testData.questions.length}>
+                  <Button className="bg-indigo-600 text-white hover:bg-indigo-700" onClick={handleSubmitTest} disabled={Object.keys(answers).length < testData.questions.length}>
                     Submit Test
                   </Button>
                 ) : (
@@ -224,18 +224,22 @@ export default function StudentTest({ params }: { params: { id: string } }) {
           </Card>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {testData.questions.map((_, index) => (
-            <Button
-              key={index}
-              variant={currentQuestion === index ? "default" : answers[index] ? "outline" : "ghost"}
-              size="sm"
-              className={`h-8 w-8 p-0 ${answers[index] ? "border-primary" : ""}`}
-              onClick={() => setCurrentQuestion(index)}
-            >
-              {index + 1}
-            </Button>
-          ))}
+        <div className="mt-4 flex flex-wrap gap-2 ">
+{testData.questions.map((_, index) => (
+  <Button
+    key={index}
+    variant={currentQuestion === index ? "default" : answers[index] ? "outline" : "ghost"}
+    size="sm"
+    className={`h-8 w-8 p-0 
+      ${answers[index] ? "border-indigo-500 text-indigo-600" : ""}
+       ${currentQuestion === index ? "bg-indigo-600 text-white hover:bg-indigo-700" : ""}
+      `}
+    onClick={() => setCurrentQuestion(index)}
+
+  >
+    {index + 1}
+  </Button>
+))}
         </div>
       </div>
     </div>

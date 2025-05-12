@@ -1,12 +1,13 @@
 'use client';
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; // ✅ Step 1
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import { toast } from '@/components/ui/use-toast';
 
 const Login: React.FC = () => {
-  const router = useRouter(); // ✅ Step 2
+  const router = useRouter();
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -23,24 +24,48 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login submitted:', form);
-    const router = useRouter();
-    // after successful login
-    // Fake login logic (replace with your real API call)
-    // await fetch('/api/login', ...)
-    alert('Logged in!');
-    router.push('/sidebar'); // ✅ Step 3
+
+    try {
+      const response = await axios.post('http://localhost:8000/api/login', {
+        email: form.email,
+        password: form.password,
+      });
+
+      toast({
+        title: 'Login Successful',
+        description: 'Welcome back! Redirecting to your dashboard...',
+      });
+
+      // Optionally store token or user info here
+      // localStorage.setItem('token', response.data.token);
+
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
+    } catch (error: any) {
+      if (error.response && error.response.status === 401) {
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: 'Invalid email or password.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Server Error',
+          description: 'Something went wrong during login.',
+        });
+      }
+    }
   };
 
   return (
     <div className="flex min-h-screen">
-      {/* Left side: Form */}
       <div className="flex flex-col justify-center flex-1 px-8 sm:px-20">
         <div className="max-w-md w-full mx-auto">
           <h2 className="text-3xl font-bold text-center text-indigo-600 mb-2">Welcome back!</h2>
           <h3 className="text-xl font-bold text-center mb-8">Login to your account here</h3>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address <span className='text-red-500'>*</span>
@@ -56,7 +81,6 @@ const Login: React.FC = () => {
               />
             </div>
 
-            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password <span className='text-red-500'>*</span>
@@ -72,7 +96,6 @@ const Login: React.FC = () => {
               />
             </div>
 
-            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -92,7 +115,6 @@ const Login: React.FC = () => {
               </Link>
             </div>
 
-            {/* Submit Button */}
             <div>
               <button
                 type="submit"
@@ -112,7 +134,6 @@ const Login: React.FC = () => {
         </div>
       </div>
 
-      {/* Right side: Image + title */}
       <div className="hidden lg:flex flex-col justify-center items-center flex-1 bg-[#4A3AFF] text-white p-10">
         <Image src="/images/Applogo.png" alt="Exam Illustration" width={300} height={300} />
         <h2 className="mt-6 text-2xl font-bold">Mock Exam Platform</h2>
