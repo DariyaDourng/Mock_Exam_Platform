@@ -1,82 +1,113 @@
-'use client'
-import React, { useState } from 'react';
-import { NextPage } from 'next';
+"use client"
 
+import type React from "react"
 
-const ForgotPassword: NextPage = () => {
-  const [email, setEmail] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { toast } from "@/components/ui/use-toast"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Loader2 } from "lucide-react"
+
+export default function ForgotPasswordPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
 
-    // Add API request for password reset here (example):
+    if (!email) {
+      setError("Email is required")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const res = await fetch('/api/password-reset', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/api/sendOTP", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email }),
-      });
+      })
 
-      if (res.ok) {
-        setMessage('Check your email for the password reset link.');
-      } else {
-        setMessage('An error occurred. Please try again later.');
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send OTP")
       }
+
+      toast({
+        title: "OTP Sent",
+        description: "A 6-digit code has been sent to your email",
+      })
+
+      router.push(`/reset-password/otp?email=${encodeURIComponent(email)}`)
     } catch (error) {
-      setMessage('Something went wrong. Please try again.');
+      console.error("Forgot password error:", error)
+      setError(error instanceof Error ? error.message : "Failed to send OTP")
     } finally {
-      setLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-semibold text-center text-indigo-600 mb-6">Forgot your password?</h2>
-        <div className="text-center text-sm text-gray-600 mb-6">
-          No problem. Just let us know your email address and we will email you a password reset link.
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold tracking-tight">Forgot Password</CardTitle>
+          <CardDescription>Enter your email address and we'll send you a code to reset your password</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
+            </div>
+          )}
 
-        {message && <p className="text-center text-sm mb-4 text-gray-700">{message}</p>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                required
+              />
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              name="email"
-              id="email"
-              value={email}
-              onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setEmail(e.target.value)}
-              required
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Enter your email"
-            />
+            <Button type="submit" className="w-full" disabled={isLoading || !email}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Reset Code"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <div className="text-sm text-gray-500">
+            Remember your password?{' '}
+            <Link href="/login" className="font-medium text-primary hover:text-primary/80">
+              Back to login
+            </Link>
           </div>
-
-          <div>
-            <button
-              type="submit"
-              className="w-full py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition"
-              disabled={loading}
-            >
-              {loading ? 'Sending...' : 'Email Password Reset Link'}
-            </button>
-          </div>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Remember your password?{' '}
-          <a href="/login" className="text-indigo-600 hover:underline">Sign In</a>
-        </p>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
-  );
-};
-
-export default ForgotPassword;
+  )
+}

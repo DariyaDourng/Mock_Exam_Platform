@@ -52,7 +52,7 @@ export default function AdminSidebarPage() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-white shadow-md transform transition-transform duration-300 ease-in-out
+        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-indigo-50 shadow-md transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:block`}
       >
         <div className="flex flex-col h-full px-4 py-6 overflow-y-auto">

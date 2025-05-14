@@ -223,21 +223,6 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Notifications */}
-        {/* <div className="space-y-2">
-          {notifications.map((notification) => (
-            <Alert key={notification.id} variant={notification.type === "warning" ? "destructive" : "default"}>
-              <div className="flex items-start">
-                {getNotificationIcon(notification.type)}
-                <div className="ml-2">
-                  <AlertTitle>{notification.title}</AlertTitle>
-                  <AlertDescription>{notification.message}</AlertDescription>
-                </div>
-              </div>
-            </Alert>
-          ))}
-        </div> */}
-
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">

@@ -22,8 +22,8 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 right-0 left-0 bottom-auto flex items-center justify-end p-4 shadow-md
-      bg-white z-50 transform transition-transform duration-300 ease-in-out">
+    <header className="fixed top-0 right-0 left-0 bottom-auto flex items-center justify-end p-4 border-b border-gray-200 border-solid
+     z-50 transform transition-transform bg-white duration-300 ease-in-out">
       {/* Right: Admin Profile */}
       <div className="flex items-center space-x-4">
         <span className="text-gray-600">admin</span>

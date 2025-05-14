@@ -1,12 +1,25 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'react-hot-toast';
 
 const Login: React.FC = () => {
+   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    const alreadyVerified = searchParams.get('already_verified');
+
+    if (verified) {
+      toast.success('Email verified successfully!');
+    } else if (alreadyVerified) {
+      toast('🔁 Your email is already verified.');
+    }
+  }, [searchParams]);
+
   const router = useRouter();
   const [form, setForm] = useState({
     email: '',
@@ -22,42 +35,67 @@ const Login: React.FC = () => {
     setForm({ ...form, rememberMe: e.target.checked });
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   try {
+  //     const response = await axios.post('http://localhost:8000/api/login', {
+  //       email: form.email,
+  //       password: form.password,
+  //     });
+
+  //     toast({
+  //       title: 'Login Successful',
+  //       description: 'Welcome back! Redirecting to your dashboard...',
+  //     });
+
+  //     // Optionally store token or user info here
+  //     // localStorage.setItem('token', response.data.token);
+
+  //     setTimeout(() => {
+  //       router.push('/dashboard');
+  //     }, 1000);
+  //   } catch (error: any) {
+  //     if (error.response && error.response.status === 401) {
+  //       toast({
+  //         variant: 'destructive',
+  //         title: 'Login Failed',
+  //         description: 'Invalid email or password.',
+  //       });
+  //     } else {
+  //       toast({
+  //         variant: 'destructive',
+  //         title: 'Server Error',
+  //         description: 'Something went wrong during login.',
+  //       });
+  //     }
+  //   }
+  // };
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const response = await axios.post('http://localhost:8000/api/login', {
-        email: form.email,
-        password: form.password,
-      });
+  try {
+    const response = await axios.post('http://localhost:8000/api/login', {
+      email: form.email,
+      password: form.password,
+    });
 
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome back! Redirecting to your dashboard...',
-      });
+    toast.success('Login Successful!');
 
-      // Optionally store token or user info here
-      // localStorage.setItem('token', response.data.token);
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 1000);
+  } catch (error: any) {
+  if (error.response?.status === 401) {
+    toast.error('Invalid email or password.');
+  } else if (error.response?.status === 403) {
+    toast.error('Please verify your email before logging in.');
+  } else {
+    toast.error('Something went wrong during login.');
+  }
+}
 
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1000);
-    } catch (error: any) {
-      if (error.response && error.response.status === 401) {
-        toast({
-          variant: 'destructive',
-          title: 'Login Failed',
-          description: 'Invalid email or password.',
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Server Error',
-          description: 'Something went wrong during login.',
-        });
-      }
-    }
-  };
+};
 
   return (
     <div className="flex min-h-screen">

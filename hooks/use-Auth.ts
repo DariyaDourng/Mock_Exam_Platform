@@ -5,6 +5,7 @@ export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     // check auth from localStorage or backend
     setLoading(false);
