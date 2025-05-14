@@ -21,7 +21,8 @@ class CustomVerifyEmail extends VerifyEmail
             ->greeting('Hello ' . $notifiable->name . ',')
             ->line('Thank you for registering. Please verify your email address by clicking the button below:')
             ->action('Verify Email', $verificationUrl)
-            ->line('If you did not create an account, no further action is required.')
+            ->line('If you did not create an account, no further action is required. ')
+            
             ->salutation('Thanks, Online Exam System Team');
     }
 

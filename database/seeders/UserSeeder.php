@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
                 'school_name' => 'Admin Institute',
                 'is_active' => 1,
                 'created_at' => now(),
-                'updated_at' => now(),
+          
             ],
             [
                 'name' => 'Jae Jeong',
@@ -45,7 +45,7 @@ class UserSeeder extends Seeder
                 'school_name' => 'NCT 127 Institute',
                 'is_active' => 1,
                 'created_at' => now(),
-                'updated_at' => now(),
+                
             ],
         
         ]);

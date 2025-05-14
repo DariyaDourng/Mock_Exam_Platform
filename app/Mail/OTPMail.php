@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
@@ -10,26 +9,18 @@ class OTPMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    private $data = [];
+    public $data;
 
-    /**
-    * Create a new message instance.
-    */
-    public function __construct( $data)
+    public function __construct($data)
     {
         $this->data = $data;
     }
-    /**
-    * build the message
-    * @return $this
-    */
+
     public function build()
     {
-        $data = $this->data;
-
-        return $this->from($data['fromEmail'],$data['fromName'])
-        ->subject($this->data['subject'])
-        ->view('optEmailTemplate', compact('data'))
-        ->with('data',$this->data);
+        return $this->from($this->data['fromEmail'], $this->data['fromName'])
+            ->subject($this->data['subject'])
+            ->view('emails.otpEmailTemplate')
+            ->with(['otp' => $this->data['otp']]);
     }
 }

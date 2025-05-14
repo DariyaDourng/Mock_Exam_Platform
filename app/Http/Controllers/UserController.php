@@ -66,27 +66,23 @@ class UserController extends Controller
                 'is_active'     => $request->is_active
             ]);
 
+           
             return response()->json(
-            [
-                'status'  => 'success',
-                'data' => $user,
-                'message' => 'User created successfully'
-            ], 201);
-        } catch (QueryException $e) {
-            return response()->json(
-            [
-                'status'  => 'fail',
-                'message' => 'Database error: ' . $e->getMessage()
-            ], 500);
+                [
+                    'status'  => 'success',
+                    'data'    => $user,
+                    'message' => 'User created successfully'
+                ]
+            , Response::HTTP_CREATED);
+
         } catch (\Exception $e) {
             return response()->json(
-            [
-                'status'  => 'fail',
-                'message' => 'Something went wrong: ' . $e->getMessage()
-            ], 500);
+                [
+                    'status'  => 'fail',
+                    'message' => 'Something went wrong: ' . $e->getMessage()
+                ], 500);
         }
     }
-
 
     public function getById($id = 0)
     {

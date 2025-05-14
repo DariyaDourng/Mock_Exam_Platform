@@ -56,14 +56,6 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         return $this->role->name === 'admin';
     }
 
-
-    // public function student(){
-
-    //     return $this->belongsTo(Student::class, 'id', 'user_id')
-    //     ->with(['role:id,name'])
-    //     ->where('role_id', RoleEnum::Student);
-    // }
-
         public function student(){
         return $this->select('id', 'name', 'email', 'role_id')
         ->with(['role:id,name'])

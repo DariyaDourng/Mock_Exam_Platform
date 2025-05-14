@@ -25,13 +25,15 @@ return new class extends Migration
             $table->string('gender')->nullable();
             $table->string('school_name')->nullable();
             $table->boolean('is_active')->default(1);
+
             
             $table->timestamp('email_verified_at')->nullable();
             $table->string('otp')->nullable();
             $table->dateTime('otp_sent_at')->nullable();
             $table->dateTime('otp_verified_at')->nullable();
 
-
+            $table->timestamp('created_at');
+            $table->timpstamp('updated_at');
             $table->rememberToken();
             $table->timestamps();
         });

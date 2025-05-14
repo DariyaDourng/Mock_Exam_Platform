@@ -1,41 +1,54 @@
 <?php
+
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Facades\URL;
+use App\Models\User;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes (No Auth)
-|--------------------------------------------------------------------------
-*/
+Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
+    $user = User::findOrFail($id);
 
-/*
-|--------------------------------------------------------------------------
-| Public Auth Routes
-|--------------------------------------------------------------------------
-*/
-
-use Illuminate\Support\Facades\Auth;
-
-
-Route::post('/dev-login', function (Request $request) {
-    $user = \App\Models\User::where('email', $request->email)->first();
-
-    if (! $user) {
-        return response()->json(['message' => 'User not found'], 404);
+    // Validate the hash
+    if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+        abort(403, 'Invalid verification link.');
     }
 
-    // Issue token without password check
-    $token = Auth::login($user);
+    // Already verified?
+    if ($user->hasVerifiedEmail()) {
+        return redirect('http://localhost:3000/login?already_verified=1');
+    }
 
-    return response()->json([
-        'token' => $token,
-        'note' => 'Dev login: do not use in production.'
-    ]);
+    // Mark email as verified
+    $user->markEmailAsVerified();
+    event(new Verified($user));
+
+    // ✅ Redirect to login page
+    return redirect('http://localhost:3000/login?verified=1');
+})->middleware(['signed'])->name('verification.verify');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', function () {
+        // Only verified users can access
+    });
 });
+
+Route::post('/check-email', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+    ]);
+
+    $exists = \App\Models\User::where('email', $request->email)->exists();
+
+    return response()->json(['exists' => $exists]);
+});
+
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('/register', 'register');
@@ -43,32 +56,13 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/roles', 'roles');
 
     // OTP-related routes
-    Route::post('/sendOTP', 'sendOTP');
-    Route::post('/verifyOTP', 'verifyOTP');
-    Route::post('/newPassword', 'newPassword');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Email Verification Routes
-|--------------------------------------------------------------------------
-*/
-
-// ✅ When user clicks email verification link
-
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-
-    // ✅ Activate user
-    $user = $request->user();
-    $user->is_active = true;
-    $user->save();
-
-    return response()->json(['message' => 'Email verified successfully, account is now active.']);
-})->middleware(['auth:api', 'signed'])->name('verification.verify');
+Route::post('/sendOTP', [AuthController::class, 'sendOTP']);
+Route::post('/verifyOTP', [AuthController::class, 'verifyOTP']);
+Route::post('/resetpassword', [AuthController::class, 'newPassword']);
 
 
-// ✅ When user requests to resend the verification email
+
 Route::post('/email/resend', function (Request $request) {
     if ($request->user()->hasVerifiedEmail()) {
         return response()->json(['message' => 'Email already verified.']);
@@ -79,29 +73,14 @@ Route::post('/email/resend', function (Request $request) {
     return response()->json(['message' => 'Verification email sent.']);
 })->middleware(['auth:api'])->name('verification.send');
 
-/*
-|--------------------------------------------------------------------------
-| Protected Routes (Require Auth)
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth:api'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Authenticated User Actions
-    |--------------------------------------------------------------------------
-    */
     Route::controller(AuthController::class)->group(function () {
         Route::get('/profile', 'profile');
         Route::post('/profile/update', 'update_profile');
         Route::post('/logout', 'logout');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | User Management
-    |--------------------------------------------------------------------------
-    */
     Route::controller(UserController::class)->group(function () {
         Route::get('/user/lists', 'index');
         Route::post('/user/create', 'create');
@@ -111,11 +90,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('/user/search', 'search');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Role Management
-    |--------------------------------------------------------------------------
-    */
+
     Route::controller(RoleController::class)->group(function () {
         Route::get('/roles/lists', 'index');
         Route::post('/roles/create', 'store');
