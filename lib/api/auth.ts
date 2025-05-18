@@ -18,5 +18,5 @@ export const login = async (data: {
   email: string;
   password: string;
 }) => {
-  return axios.post(`${API_BASE}/login`, data);
+  return axios.post(`${API_BASE}/login`, data, { withCredentials: true });
 };

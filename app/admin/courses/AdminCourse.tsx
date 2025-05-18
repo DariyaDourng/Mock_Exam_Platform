@@ -1,112 +1,160 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BookOpen, MoreHorizontal, Plus, Search, Users, Calendar, Clock } from "lucide-react"
+import { MoreHorizontal, Plus, Search, Users, Calendar, Clock } from "lucide-react"
 import { AddCourseModal } from "@/components/modals/add-course-modal"
 import { EditCourseModal } from "@/components/modals/edit-course-modal"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
+import { DeleteCourseModal } from "@/components/modals/delete-course-modal"
+import { useRouter } from "next/navigation"
 
 export default function AdminCoursesPage() {
+  const router = useRouter()
   const { toast } = useToast()
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<any>(null)
+  const [courses, setCourses] = useState<any[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null)
 
-  // Mock data
-  const [courses, setCourses] = useState([
-    {
-      id: 1,
-      name: "Math Fundamentals",
-      category: "Math",
-      students: 45,
-      exams: 3,
-      createdAt: "2023-05-01",
-      status: "active",
-    },
-    {
-      id: 2,
-      name: "Logic IQ Test",
-      category: "Logic IQ",
-      students: 38,
-      exams: 2,
-      createdAt: "2023-04-28",
-      status: "active",
-    },
-    {
-      id: 3,
-      name: "Advanced Mathematics",
-      category: "Math",
-      students: 27,
-      exams: 4,
-      createdAt: "2023-04-15",
-      status: "draft",
-    },
-    {
-      id: 4,
-      name: "Critical Thinking",
-      category: "Logic IQ",
-      students: 32,
-      exams: 3,
-      createdAt: "2023-04-10",
-      status: "active",
-    },
-    {
-      id: 5,
-      name: "Algebra Basics",
-      category: "Math",
-      students: 41,
-      exams: 2,
-      createdAt: "2023-04-05",
-      status: "active",
-    },
-  ])
-
-  const handleAddCourse = (courseData: any) => {
-    // In a real app, you would call an API to add the course
-    const newCourse = {
-      id: courses.length + 1,
-      name: courseData.name,
-      category: courseData.category,
-      students: 0,
-      exams: 0,
-      createdAt: new Date().toISOString().split("T")[0],
-      status: courseData.isActive ? "active" : "draft",
+  const fetchSubjects = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/api/subjects")
+      if (response.ok) {
+        const data = await response.json()
+        setCourses(data.data || [])
+      } else {
+        throw new Error("Failed to fetch subjects")
+      }
+    } catch (error) {
+      console.error("Error fetching subjects:", error)
     }
-
-    setCourses([newCourse, ...courses])
-
-    toast({
-      title: "Course created",
-      description: `${courseData.name} has been successfully created.`,
-    })
   }
 
-  const handleEditCourse = (courseData: any) => {
-    // In a real app, you would call an API to update the course
-    const updatedCourses = courses.map((course) =>
-      course.id.toString() === courseData.id
-        ? {
-            ...course,
-            name: courseData.name,
-            category: courseData.category,
-            status: courseData.isActive ? "active" : "draft",
-          }
-        : course,
-    )
+  const openDeleteModal = (id: string) => {
+    setSelectedCourseId(id)
+    setIsModalOpen(true)
+  }
 
-    setCourses(updatedCourses)
+  const handleDeleteCourse = async () => {
+    if (!selectedCourseId) return
+    try {
+      const response = await fetch(`http://localhost:8000/api/subjects/${selectedCourseId}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to delete course")
+      }
+      toast({
+        title: "Course deleted",
+        description: "The course was deleted successfully.",
+      })
+      setIsModalOpen(false)
+      fetchSubjects()
+    } catch (error) {
+      console.error("Delete error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete course.",
+        variant: "destructive"
+      })
+    }
+  }
 
-    toast({
-      title: "Course updated",
-      description: `${courseData.name} has been successfully updated.`,
-    })
+  useEffect(() => {
+    fetchSubjects()
+  }, [])
+
+  const handleAddCourse = async (courseData: any) => {
+    try {
+      const formData = new FormData()
+      formData.append("name", courseData.name || "")
+      formData.append("description", courseData.description || "")
+      formData.append("is_active", courseData.isActive ? "1" : "0")
+      if (courseData.image) {
+        formData.append("subject_image", courseData.image)
+      }
+
+      const response = await fetch("http://localhost:8000/api/subjects", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.log("Raw Response Body:", errorText)
+        throw new Error("Failed to create course")
+      }
+
+      toast({
+        title: "Course created",
+        description: `${courseData.name} has been successfully created.`,
+      })
+
+      fetchSubjects()
+      setIsAddModalOpen(false)
+    } catch (error) {
+      console.error("Error adding course:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create course",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleEditCourse = async (courseData: any) => {
+    try {
+      const formData = new FormData()
+      formData.append("_method", "PUT")
+      formData.append("name", courseData.name || "")
+      formData.append("description", courseData.description || "")
+      formData.append("is_active", courseData.isActive ? "1" : "0")
+      if (courseData.image) {
+        formData.append("subject_image", courseData.image)
+      }
+
+      const response = await fetch(`http://localhost:8000/api/subjects/${courseData.id}`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.log("Raw Response Body:", errorText)
+        throw new Error("Failed to update course")
+      }
+
+      toast({
+        title: "Course updated",
+        description: `${courseData.name} has been successfully updated.`,
+      })
+
+      fetchSubjects()
+      setIsEditModalOpen(false)
+    } catch (error) {
+      console.error("Error updating course:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update course",
+        variant: "destructive"
+      })
+    }
   }
 
   const openEditModal = (course: any) => {
@@ -145,9 +193,7 @@ export default function AdminCoursesPage() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input type="search" placeholder="Search courses..." className="w-[250px] pl-8" />
             </div>
-            <Button variant="outline" size="sm">
-              Filter
-            </Button>
+            <Button variant="outline" size="sm">Filter</Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -155,7 +201,7 @@ export default function AdminCoursesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Students</TableHead>
                 <TableHead>Exams</TableHead>
                 <TableHead>Created</TableHead>
@@ -168,30 +214,30 @@ export default function AdminCoursesPage() {
                 <TableRow key={course.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-muted-foreground" />
-                      <span>{course.name}</span>
+                      <span><img width={50} height={50} src={course.subject_image} /></span>
+                      <span className="text-[16px] font-medium">{course.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{course.category}</TableCell>
+                  <TableCell><p className="text-sm ">{course.description}</p></TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4 text-muted-foreground" />
-                      <span>{course.students}</span>
+                      <span>{course.students || 0}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{course.exams}</span>
+                      <span>{course.exams || 0}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{new Date(course.createdAt).toLocaleDateString()}</span>
+                      <span>{new Date(course.created_at).toLocaleDateString()}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(course.status)}</TableCell>
+                  <TableCell>{getStatusBadge(course.is_active ? "active" : "draft")}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -208,8 +254,9 @@ export default function AdminCoursesPage() {
                         <DropdownMenuItem asChild>
                           <Link href={`/admin/courses/${course.id}/students`}>View Students</Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => openDeleteModal(course.id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
+                     
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
@@ -219,16 +266,25 @@ export default function AdminCoursesPage() {
         </CardContent>
       </Card>
 
-      {/* Add Course Modal */}
-      <AddCourseModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSubmit={handleAddCourse} />
+      <AddCourseModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddCourse}
+      />
 
-      {/* Edit Course Modal */}
       <EditCourseModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleEditCourse}
         courseData={selectedCourse}
       />
+
+       <DeleteCourseModal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        courseId={selectedCourseId}
+                        onDeleted={handleDeleteCourse}
+                      />
     </div>
   )
 }

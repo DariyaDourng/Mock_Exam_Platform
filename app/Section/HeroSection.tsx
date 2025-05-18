@@ -17,7 +17,7 @@ function HeroSection() {
               <p className="mt-4 text-lg text-gray-600">
                 Number of active users right now
               </p>
-              <p className="mt-2 text-3xl font-bold text-[#4A3AFF]">200+</p>
+              <p className="mt-2 text-3xl font-bold text-indigo-600">200+</p>
             </div>
           </div>
 

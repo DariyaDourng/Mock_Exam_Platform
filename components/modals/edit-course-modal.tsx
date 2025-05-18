@@ -1,8 +1,6 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -15,52 +13,56 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Upload, Loader2 } from "lucide-react"
+import toast from "react-hot-toast"
 
 interface EditCourseModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (courseData: any) => void
+  onSubmit: (courseData: {
+    id: string
+    name: string
+    description: string
+    isActive: boolean
+    image: File | null
+  }) => Promise<void>
   courseData?: {
     id: string | number
     name: string
-    category: string
     description?: string
     isActive?: boolean
-    duration?: string
-    students?: number
-    exams?: number
-    createdAt?: string
     status?: string
   }
 }
 
-export function EditCourseModal({ isOpen, onClose, onSubmit, courseData }: EditCourseModalProps) {
+export function EditCourseModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  courseData,
+}: EditCourseModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [imageError, setImageError] = useState<string | null>(null)
+
   const [formData, setFormData] = useState({
     id: "",
     name: "",
-    category: "Math",
     description: "",
     isActive: true,
-    duration: "8",
-    image: null,
+    image: null as File | null,
   })
 
-  // Update form data when courseData changes
   useEffect(() => {
     if (courseData) {
       setFormData({
         id: courseData.id.toString(),
         name: courseData.name || "",
-        category: courseData.category || "Math",
         description: courseData.description || "",
         isActive: courseData.status === "active" || courseData.isActive || false,
-        duration: courseData.duration || "8",
         image: null,
       })
+      setImageError(null)
     }
   }, [courseData])
 
@@ -71,17 +73,33 @@ export function EditCourseModal({ isOpen, onClose, onSubmit, courseData }: EditC
     }))
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      setImageError("Please upload a valid image file.")
+      handleChange("image", null)
+    } else if (file.size > 2 * 1024 * 1024) {
+      setImageError("The image size should be less than 2MB.")
+      handleChange("image", null)
+    } else {
+      setImageError(null)
+      handleChange("image", file)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
     try {
-      // In a real app, you would send this data to your API
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
-      onSubmit(formData)
+      await onSubmit(formData)
+      toast.success("Course updated successfully")
       onClose()
     } catch (error) {
       console.error("Error updating course:", error)
+      toast.error("Failed to update course")
     } finally {
       setIsSubmitting(false)
     }
@@ -95,11 +113,10 @@ export function EditCourseModal({ isOpen, onClose, onSubmit, courseData }: EditC
             <DialogTitle>Edit Course</DialogTitle>
             <DialogDescription>Update the course information.</DialogDescription>
           </DialogHeader>
+
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
+              <Label htmlFor="name" className="text-right">Name</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -108,26 +125,9 @@ export function EditCourseModal({ isOpen, onClose, onSubmit, courseData }: EditC
                 required
               />
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right">
-                Category
-              </Label>
-              <Select value={formData.category} onValueChange={(value) => handleChange("category", value)}>
-                <SelectTrigger id="category" className="col-span-3">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Math">Math</SelectItem>
-                  <SelectItem value="Logic IQ">Logic IQ</SelectItem>
-                  <SelectItem value="Science">Science</SelectItem>
-                  <SelectItem value="Language">Language</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Description
-              </Label>
+              <Label htmlFor="description" className="text-right">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -136,36 +136,40 @@ export function EditCourseModal({ isOpen, onClose, onSubmit, courseData }: EditC
                 rows={3}
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="duration" className="text-right">
-                Duration (weeks)
-              </Label>
-              <Input
-                id="duration"
-                type="number"
-                value={formData.duration}
-                onChange={(e) => handleChange("duration", e.target.value)}
-                className="col-span-3"
-                min="1"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="image" className="text-right">
-                Course Image
-              </Label>
+
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="image" className="text-right pt-2">Course Image</Label>
               <div className="col-span-3">
-                <Button type="button" variant="outline" className="w-full">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Update Image
-                </Button>
-                <p className="mt-1 text-xs text-muted-foreground">Recommended size: 1280x720px. Max size: 2MB.</p>
+                <label
+                  htmlFor="image"
+                  className="flex items-center justify-center gap-2 p-[8px] border rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm text-black">Update image</span>
+                  <input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+                {imageError && <p className="text-red-500 text-xs mt-1">{imageError}</p>}
+                {formData.image && (
+                  <img
+                    src={URL.createObjectURL(formData.image)}
+                    alt="Preview"
+                    className="mt-2 max-h-32 rounded border"
+                  />
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Recommended size: 1280x720px. Max size: 2MB.
+                </p>
               </div>
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="isActive" className="text-right">
-                Active Status
-              </Label>
+              <Label htmlFor="isActive" className="text-right">Active Status</Label>
               <div className="col-span-3 flex items-center space-x-2">
                 <Switch
                   id="isActive"
@@ -173,16 +177,19 @@ export function EditCourseModal({ isOpen, onClose, onSubmit, courseData }: EditC
                   onCheckedChange={(checked) => handleChange("isActive", checked)}
                 />
                 <Label htmlFor="isActive" className="text-sm font-normal">
-                  {formData.isActive ? "Active (visible to students)" : "Draft (hidden from students)"}
+                  {formData.isActive
+                    ? "Active (visible to students)"
+                    : "Draft (hidden from students)"}
                 </Label>
               </div>
             </div>
           </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !!imageError}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

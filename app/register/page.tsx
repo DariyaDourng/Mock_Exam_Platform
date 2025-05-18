@@ -145,7 +145,7 @@ const RegisterPage: React.FC = () => {
             />
             <button
               type="submit"
-              className="rounded-md w-full py-2 px-4 bg-[#4A3AFF] text-white font-medium hover:bg-indigo-700 transition"
+              className="rounded-md w-full py-2 px-4 bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
             >
               Sign Up
             </button>
@@ -160,7 +160,8 @@ const RegisterPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="hidden lg:flex flex-col justify-center items-center flex-1 bg-[#4A3AFF] text-white p-10">
+      <div className="hidden lg:flex flex-col justify-center items-center flex-1 bg-indigo-600
+       text-white p-10">
         <Image src="/images/Applogo.png" alt="Mock Exam Platform" width={300} height={300} />
         <h2 className="mt-6 text-2xl font-bold">Mock Exam Platform</h2>
       </div>

@@ -5,6 +5,9 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button'; // Adjust the path based on your project structure
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login: React.FC = () => {
    const searchParams = useSearchParams();
@@ -26,6 +29,8 @@ const Login: React.FC = () => {
     password: '',
     rememberMe: false,
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -35,51 +40,21 @@ const Login: React.FC = () => {
     setForm({ ...form, rememberMe: e.target.checked });
   };
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   try {
-  //     const response = await axios.post('http://localhost:8000/api/login', {
-  //       email: form.email,
-  //       password: form.password,
-  //     });
-
-  //     toast({
-  //       title: 'Login Successful',
-  //       description: 'Welcome back! Redirecting to your dashboard...',
-  //     });
-
-  //     // Optionally store token or user info here
-  //     // localStorage.setItem('token', response.data.token);
-
-  //     setTimeout(() => {
-  //       router.push('/dashboard');
-  //     }, 1000);
-  //   } catch (error: any) {
-  //     if (error.response && error.response.status === 401) {
-  //       toast({
-  //         variant: 'destructive',
-  //         title: 'Login Failed',
-  //         description: 'Invalid email or password.',
-  //       });
-  //     } else {
-  //       toast({
-  //         variant: 'destructive',
-  //         title: 'Server Error',
-  //         description: 'Something went wrong during login.',
-  //       });
-  //     }
-  //   }
-  // };
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
   try {
-    const response = await axios.post('http://localhost:8000/api/login', {
-      email: form.email,
-      password: form.password,
-    });
-
+    const response = await axios.post(
+      'http://localhost:8000/api/login',
+      {
+        email: form.email,
+        password: form.password,
+      },
+      {
+        withCredentials: true,
+      }
+    );
+  
     toast.success('Login Successful!');
 
     setTimeout(() => {
@@ -91,7 +66,7 @@ const Login: React.FC = () => {
   } else if (error.response?.status === 403) {
     toast.error('Please verify your email before logging in.');
   } else {
-    toast.error('Something went wrong during login.');
+    toast.error('Something went wrong.');
   }
 }
 
@@ -119,21 +94,33 @@ const Login: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password <span className='text-red-500'>*</span>
-              </label>
-              <input
-                type="password"
-                name="password"
-                id="password"
-                value={form.password}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-
+          <div>
+  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+    Password <span className="text-red-500">*</span>
+  </label>
+  <div className="relative">
+    <input
+      type={showPassword ? "text" : "password"}
+      name="password"
+      id="password"
+      value={form.password}
+      onChange={handleChange}
+      required
+      className="mt-1 block w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword((prev) => !prev)}
+      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 focus:outline-none"
+    >
+      {showPassword ? (
+        <Eye className="h-5 w-5" />
+      ) : (
+        <EyeOff className="h-5 w-5" />
+      )}
+    </button>
+  </div>
+  </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -154,12 +141,16 @@ const Login: React.FC = () => {
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="w-full py-2 px-4 bg-[#4A3AFF] text-white font-medium rounded-md hover:bg-indigo-700 transition"
-              >
-                Sign In
-              </button>
+              <Button type="submit" className="w-full bg-indigo-600" disabled={isLoading || !form.email || !form.password}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sign In...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
             </div>
           </form>
 
@@ -172,7 +163,7 @@ const Login: React.FC = () => {
         </div>
       </div>
 
-      <div className="hidden lg:flex flex-col justify-center items-center flex-1 bg-[#4A3AFF] text-white p-10">
+      <div className="hidden lg:flex flex-col justify-center items-center flex-1 bg-indigo-600 text-white p-10">
         <Image src="/images/Applogo.png" alt="Exam Illustration" width={300} height={300} />
         <h2 className="mt-6 text-2xl font-bold">Mock Exam Platform</h2>
       </div>

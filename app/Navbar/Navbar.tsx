@@ -52,14 +52,14 @@ const Navbar: React.FC = () => {
             {/* Login Button */}
             <Link
               href="/login"
-              className="text-[#4A3AFF] px-4 py-2 border border-[#4A3AFF] rounded-md"
+              className="text-indigo-600 px-4 py-2 border border-indigo-600 rounded-md"
             >
               Login
             </Link>
             {/* Get Started Button */}
             <Link
               href="/register"
-              className="bg-[#4A3AFF] text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
             >
               Get started
             </Link>
