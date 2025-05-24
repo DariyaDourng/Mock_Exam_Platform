@@ -5,6 +5,7 @@ import Image from 'next/image';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import debounce from 'lodash/debounce';
+import { Eye, EyeOff } from 'lucide-react';
 
 import {
   Select,
@@ -27,9 +28,15 @@ const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState({
     password: '',
     email: '',
+    confirmPassword: '',
   });
 
-  // Debounced email check
+  const [confirmTouched, setConfirmTouched] = useState(false);
+
+  // Password visibility state
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const checkEmailExists = debounce(async (email: string) => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setErrors((prev) => ({ ...prev, email: '' }));
@@ -49,7 +56,8 @@ const RegisterPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    const newForm = { ...form, [name]: value };
+    setForm(newForm);
 
     if (name === 'email') checkEmailExists(value);
 
@@ -60,6 +68,21 @@ const RegisterPage: React.FC = () => {
         password: strong.test(value)
           ? ''
           : 'Password must be at least 8 characters, include uppercase, lowercase, number, and symbol.',
+      }));
+
+      setConfirmTouched(false);
+      setErrors((prev) => ({ ...prev, confirmPassword: '' }));
+    }
+
+    if (name === 'confirmPassword') {
+      if (!confirmTouched) setConfirmTouched(true);
+    }
+
+    if (confirmTouched) {
+      setErrors((prev) => ({
+        ...prev,
+        confirmPassword:
+          newForm.password === newForm.confirmPassword ? '' : 'Passwords do not match!',
       }));
     }
   };
@@ -83,6 +106,9 @@ const RegisterPage: React.FC = () => {
       });
 
       toast.success(res.data.message || 'Registered successfully. Please verify your email.');
+      setErrors({ password: '', email: '', confirmPassword: '' });
+      setConfirmTouched(false);
+      // Optionally reset form here
     } catch (err: any) {
       const messages = err?.response?.data?.errors
         ? Object.values(err.response.data.errors).flat().join('\n')
@@ -126,23 +152,25 @@ const RegisterPage: React.FC = () => {
               </Select>
             </div>
             <InputField label="School Name" name="school" value={form.school} onChange={handleChange} required />
-            <InputField
+            <InputFieldWithToggle
               label="Password"
               name="password"
-              type="password"
               value={form.password}
               onChange={handleChange}
-              required
               error={errors.password}
+              show={showPassword}
+              onToggle={() => setShowPassword((v) => !v)}
             />
-            <InputField
+            <InputFieldWithToggle
               label="Confirm Password"
               name="confirmPassword"
-              type="password"
               value={form.confirmPassword}
               onChange={handleChange}
-              required
+              error={errors.confirmPassword}
+              show={showConfirmPassword}
+              onToggle={() => setShowConfirmPassword((v) => !v)}
             />
+
             <button
               type="submit"
               className="rounded-md w-full py-2 px-4 bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
@@ -169,7 +197,52 @@ const RegisterPage: React.FC = () => {
   );
 };
 
-// Helper component
+// InputField with toggle eye icon for password fields
+const InputFieldWithToggle = ({
+  label,
+  name,
+  value,
+  onChange,
+  error = '',
+  show,
+  onToggle,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  show: boolean;
+  onToggle: () => void;
+}) => (
+  <div>
+    <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+      {label} <span className="text-red-500">*</span>
+    </label>
+    <div className="relative mt-1">
+      <input
+        type={show ? 'text' : 'password'}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required
+        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 pr-10"
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
+        tabIndex={-1}
+        aria-label={show ? 'Hide password' : 'Show password'}
+      >
+        {show ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+    </div>
+    {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+  </div>
+);
+
+// Simple InputField component for normal inputs
 const InputField = ({
   label,
   name,

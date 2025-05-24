@@ -16,11 +16,11 @@ const Login: React.FC = () => {
     const verified = searchParams.get('verified');
     const alreadyVerified = searchParams.get('already_verified');
 
-    if (verified) {
-      toast.success('Email verified successfully!');
-    } else if (alreadyVerified) {
-      toast('🔁 Your email is already verified.');
-    }
+    // if (verified) {
+    //   toast.success('Email verified successfully!');
+    // } else if (alreadyVerified) {
+    //   toast('🔁 Your email is already verified.');
+    // }
   }, [searchParams]);
 
   const router = useRouter();
@@ -54,6 +54,7 @@ const Login: React.FC = () => {
         withCredentials: true,
       }
     );
+
   
     toast.success('Login Successful!');
 
@@ -114,9 +115,9 @@ const Login: React.FC = () => {
       className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 focus:outline-none"
     >
       {showPassword ? (
-        <Eye className="h-5 w-5" />
-      ) : (
         <EyeOff className="h-5 w-5" />
+      ) : (
+        <Eye className="h-5 w-5" />
       )}
     </button>
   </div>

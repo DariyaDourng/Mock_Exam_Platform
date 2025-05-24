@@ -1,7 +1,8 @@
 
 import Header from "@/components/header/Header";
 import AdminSidebarPage from "@/components/sidebar/admin-sidebar";
-import AdminDashboard from "./AdminDashboard";
+
+import EditQuestionPage from "./EditQuestionDetail";
 
 
 
@@ -18,7 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Main content scrolls inside here */}
         <main className="flex-1 overflow-y-auto p-6 py-28 bg-gray-100">
-          <AdminDashboard />
+          <EditQuestionPage />
         </main>
       </div>
     </div>

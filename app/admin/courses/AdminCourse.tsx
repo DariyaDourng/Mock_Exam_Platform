@@ -10,14 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal, Plus, Search, Users, Calendar, Clock } from "lucide-react"
 import { AddCourseModal } from "@/components/modals/add-course-modal"
 import { EditCourseModal } from "@/components/modals/edit-course-modal"
-import { useToast } from "@/components/ui/use-toast"
+import toast from 'react-hot-toast'
 import Link from "next/link"
 import { DeleteCourseModal } from "@/components/modals/delete-course-modal"
 import { useRouter } from "next/navigation"
 
 export default function AdminCoursesPage() {
   const router = useRouter()
-  const { toast } = useToast()
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<any>(null)
@@ -54,19 +53,13 @@ export default function AdminCoursesPage() {
         const errorData = await response.json()
         throw new Error(errorData.message || "Failed to delete course")
       }
-      toast({
-        title: "Course deleted",
-        description: "The course was deleted successfully.",
-      })
+      toast.success("Course successfully deleted");
+       
       setIsModalOpen(false)
       fetchSubjects()
     } catch (error) {
       console.error("Delete error:", error)
-      toast({
-        title: "Error",
-        description: "Failed to delete course.",
-        variant: "destructive"
-      })
+     toast.error("Fail to delete course")
     }
   }
 
@@ -98,20 +91,13 @@ export default function AdminCoursesPage() {
         throw new Error("Failed to create course")
       }
 
-      toast({
-        title: "Course created",
-        description: `${courseData.name} has been successfully created.`,
-      })
-
+      toast.success("Course Sucessfully created.")
       fetchSubjects()
       setIsAddModalOpen(false)
     } catch (error) {
       console.error("Error adding course:", error)
-      toast({
-        title: "Error",
-        description: "Failed to create course",
-        variant: "destructive"
-      })
+      toast.error("Failed to create course.")
+        
     }
   }
 
@@ -140,20 +126,14 @@ export default function AdminCoursesPage() {
         throw new Error("Failed to update course")
       }
 
-      toast({
-        title: "Course updated",
-        description: `${courseData.name} has been successfully updated.`,
-      })
+     toast.success("Course successfully updated.")
 
       fetchSubjects()
       setIsEditModalOpen(false)
     } catch (error) {
       console.error("Error updating course:", error)
-      toast({
-        title: "Error",
-        description: "Failed to update course",
-        variant: "destructive"
-      })
+      toast.error("Failed to update course.")
+       
     }
   }
 
@@ -214,7 +194,7 @@ export default function AdminCoursesPage() {
                 <TableRow key={course.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <span><img width={50} height={50} src={course.subject_image} /></span>
+                      <span><img width={50} height={50}  src={course.imageUrl} /></span>
                       <span className="text-[16px] font-medium">{course.name}</span>
                     </div>
                   </TableCell>

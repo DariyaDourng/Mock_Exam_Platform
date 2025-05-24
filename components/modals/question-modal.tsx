@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
+import axios from "axios"
 import {
   Dialog,
   DialogContent,
@@ -19,101 +18,144 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { toast } from "react-hot-toast"
+
+interface Option {
+  id: string
+  text: string
+}
+
+interface Subject {
+  id: number
+  name: string
+}
 
 interface QuestionModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (questionData: any) => void
-  examId?: string | number
-  examName?: string
-  questionData?: {
-    id?: string | number
-    text: string
-    options: Array<{ id: string; text: string }>
-    correctAnswer: string
-    difficulty?: string
-    type?: string
-  }
-  isEditing?: boolean
+  onSubmitSuccess: () => void
+  questionId?: string | number
+  subjectName?: string
+  mode?: "create" | "edit"
 }
 
 export function QuestionModal({
   isOpen,
   onClose,
-  onSubmit,
-  examId,
-  examName,
-  questionData,
-  isEditing = false,
+  onSubmitSuccess,
+  questionId,
+  subjectName,
+  mode,
 }: QuestionModalProps) {
+  const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [subjects, setSubjects] = useState<Subject[]>([])
+
   const [formData, setFormData] = useState({
     id: "",
     text: "",
-    options: [
-      { id: "a", text: "" },
-      { id: "b", text: "" },
-      { id: "c", text: "" },
-      { id: "d", text: "" },
-    ],
-    correctAnswer: "a",
-    type: "multiple-choice",
+    subject_id: "",
+    options: [] as Option[],
+    correctAnswer: "", // important: initially empty so no forced 'a'
+    type: "multiple_choice",
   })
 
-  // Update form data when questionData changes (for editing)
+  // Load subjects on mount
   useEffect(() => {
-    if (questionData && isEditing) {
-      setFormData({
-        id: questionData.id?.toString() || "",
-        text: questionData.text || "",
-        options: questionData.options || [
-          { id: "a", text: "" },
-          { id: "b", text: "" },
-          { id: "c", text: "" },
-          { id: "d", text: "" },
-        ],
-        correctAnswer: questionData.correctAnswer || "a",
-        type: questionData.type || "multiple-choice",
-      })
-    } else {
+    async function fetchSubjects() {
+      try {
+        const res = await axios.get("http://127.0.0.1:8000/api/subjects")
+        setSubjects(res.data.data || [])
+      } catch (err) {
+        console.error("Failed to fetch subjects", err)
+        toast.error("Failed to load subjects")
+      }
+    }
+    fetchSubjects()
+  }, [])
+
+  // Load question and choices when questionId or subjects change
+  useEffect(() => {
+    if (!questionId) {
       // Reset form for new question
       setFormData({
         id: "",
         text: "",
+        subject_id: "",
         options: [
           { id: "a", text: "" },
           { id: "b", text: "" },
           { id: "c", text: "" },
           { id: "d", text: "" },
         ],
-        correctAnswer: "a",
-        type: "multiple-choice",
+        correctAnswer: "a", // default selected option
+        type: "multiple_choice",
       })
+      return
     }
-  }, [questionData, isEditing, isOpen])
+
+    async function fetchQuestionAndChoices() {
+      setIsLoading(true)
+      try {
+        const questionRes = await axios.get(`http://127.0.0.1:8000/api/questions/${questionId}`)
+        const questionData = questionRes.data.data || questionRes.data
+
+        // fetch choices separately, because your backend routes have dedicated endpoint
+        const choicesRes = await axios.get(`http://127.0.0.1:8000/api/questions/${questionId}/choices`)
+        const choicesData = choicesRes.data.data || choicesRes.data || []
+
+        const options = choicesData.length > 0
+          ? choicesData.map((choice: any, idx: number) => ({
+              id: String.fromCharCode(97 + idx),
+              text: choice.choice_text,
+            }))
+          : [
+              { id: "a", text: "" },
+              { id: "b", text: "" },
+              { id: "c", text: "" },
+              { id: "d", text: "" },
+            ]
+
+        // Find correct answer option id (like 'a', 'b', 'c', ...)
+        const correctChoiceIndex = choicesData.findIndex((c: any) => c.is_correct)
+        const correctAnswer = correctChoiceIndex !== -1
+          ? String.fromCharCode(97 + correctChoiceIndex)
+          : ""
+
+        setFormData({
+          id: questionData.id?.toString() || "",
+          text: questionData.question_text || "",
+          subject_id: questionData.subject_id?.toString() || "",
+          options,
+          correctAnswer,
+          type: questionData.type || "multiple_choice",
+        })
+      } catch (error: any) {
+        console.error(error)
+        toast.error(error.message || "Failed to fetch question")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (subjects.length > 0) {
+      fetchQuestionAndChoices()
+    }
+  }, [questionId, isOpen, subjects])
 
   const handleChange = (field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleOptionChange = (index: number, value: string) => {
     const updatedOptions = [...formData.options]
     updatedOptions[index] = { ...updatedOptions[index], text: value }
-    setFormData((prev) => ({
-      ...prev,
-      options: updatedOptions,
-    }))
+    setFormData((prev) => ({ ...prev, options: updatedOptions }))
   }
 
   const addOption = () => {
-    if (formData.options.length >= 6) return // Limit to 6 options
-
-    // Generate next option ID (e, f, g, etc.)
-    const nextId = String.fromCharCode(97 + formData.options.length) // 97 is ASCII for 'a'
-
+    if (formData.options.length >= 6) return
+    const nextId = String.fromCharCode(97 + formData.options.length)
     setFormData((prev) => ({
       ...prev,
       options: [...prev.options, { id: nextId, text: "" }],
@@ -121,19 +163,13 @@ export function QuestionModal({
   }
 
   const removeOption = (index: number) => {
-    if (formData.options.length <= 2) return // Minimum 2 options
-
+    if (formData.options.length <= 2) return
     const updatedOptions = formData.options.filter((_, i) => i !== index)
-
-    // If we're removing the correct answer, set the first option as correct
-    const newCorrectAnswer =
-      formData.correctAnswer === formData.options[index].id ? updatedOptions[0].id : formData.correctAnswer
-
-    setFormData((prev) => ({
-      ...prev,
-      options: updatedOptions,
-      correctAnswer: newCorrectAnswer,
-    }))
+    const newCorrect =
+      formData.correctAnswer === formData.options[index].id
+        ? updatedOptions[0].id
+        : formData.correctAnswer
+    setFormData((prev) => ({ ...prev, options: updatedOptions, correctAnswer: newCorrect }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,18 +177,64 @@ export function QuestionModal({
     setIsSubmitting(true)
 
     try {
-      // In a real app, you would send this data to your API
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
-      onSubmit({
-        ...formData,
-        examId,
-      })
+      const hasValidOptions = formData.options.every((opt) => opt.text.trim() !== "")
+      if (!formData.text.trim() || !formData.type || !hasValidOptions) {
+        throw new Error("Please fill all required fields, including at least one valid answer choice.")
+      }
+
+      // 1) Update question core data (text, type, subject)
+      const questionPayload = {
+        question_text: formData.text,
+        type: formData.type,
+        subject_id: parseInt(formData.subject_id),
+      }
+
+      if (formData.id) {
+        await axios.put(`http://127.0.0.1:8000/api/questions/${formData.id}`, questionPayload)
+
+        // 2) Update choices separately (your backend has separate route for this)
+        const choicesPayload = {
+          choices: formData.options.map((opt) => ({
+            choice_text: opt.text,
+            is_correct: opt.id === formData.correctAnswer,
+          })),
+        }
+        await axios.post(`http://127.0.0.1:8000/api/questions/${formData.id}/choices`, choicesPayload)
+      } else {
+        // For create: send everything in one call if backend supports it
+        const createPayload = {
+          ...questionPayload,
+          choices: formData.options.map((opt) => ({
+            choice_text: opt.text,
+            is_correct: opt.id === formData.correctAnswer,
+          })),
+        }
+        await axios.post(`http://127.0.0.1:8000/api/questions`, createPayload)
+      }
+
+      toast.success(formData.id ? "Question updated successfully" : "Question added successfully")
+      onSubmitSuccess()
       onClose()
-    } catch (error) {
-      console.error("Error submitting question:", error)
+    } catch (err: any) {
+      console.error("Submit error:", err.message || err)
+      toast.error("Submit error: " + (err.message || "Unknown error"))
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto flex justify-center items-center py-20">
+          <DialogHeader>
+            <DialogTitle>Loading...</DialogTitle>
+            <DialogDescription>Fetching question data</DialogDescription>
+          </DialogHeader>
+          <Loader2 className="animate-spin h-8 w-8 text-gray-500" />
+        </DialogContent>
+      </Dialog>
+    )
   }
 
   return (
@@ -160,14 +242,36 @@ export function QuestionModal({
       <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{isEditing ? "Edit Question" : "Add New Question"}</DialogTitle>
+            <DialogTitle>{mode === "edit" ? "Edit Question" : "Add New Question"}</DialogTitle>
             <DialogDescription>
-              {isEditing
+              {mode === "edit"
                 ? "Update the question details and answer options."
-                : `Create a new question for the exam${examName ? `: ${examName}` : ""}.`}
+                : `Create a new question${subjectName ? ` for subject: ${subjectName}` : ""}.`}
             </DialogDescription>
           </DialogHeader>
+
           <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="subject" className="text-right">
+                Course
+              </Label>
+              <Select
+                value={formData.subject_id}
+                onValueChange={(value) => handleChange("subject_id", value)}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select Course" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-4 items-start gap-4">
               <Label htmlFor="text" className="text-right pt-2">
                 Question Text
@@ -192,8 +296,8 @@ export function QuestionModal({
                   <SelectValue placeholder="Select question type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
-                  <SelectItem value="true-false">True/False</SelectItem>
+                  <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+                  <SelectItem value="true_false">True/False</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -252,21 +356,16 @@ export function QuestionModal({
               </div>
             </div>
           </div>
+
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isEditing ? "Updating..." : "Creating..."}
+                  {formData.id ? "Updating..." : "Creating..."}
                 </>
-              ) : isEditing ? (
-                "Update Question"
-              ) : (
-                "Add Question"
-              )}
+              ) : formData.id ? "Update Question" : "Add Question"}
             </Button>
           </DialogFooter>
         </form>

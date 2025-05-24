@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useState } from "react"
 import {
@@ -38,7 +38,7 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
   })
   const [imageError, setImageError] = useState<string | null>(null)
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: keyof typeof courseData, value: any) => {
     setCourseData((prev) => ({
       ...prev,
       [field]: value,
@@ -63,11 +63,16 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (imageError) {
+      toast.error(imageError)
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       await onSubmit(courseData)
-      toast.success("Course created successfully")
+      // toast.success("Course created successfully")
       setCourseData({
         name: "",
         description: "",
@@ -77,7 +82,7 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
       onClose()
     } catch (error) {
       console.error("Error submitting course:", error)
-      toast.error("Failed to create course")
+      // toast.error("Failed to create course")
     } finally {
       setIsSubmitting(false)
     }
@@ -94,7 +99,9 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
 
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Name</Label>
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
               <Input
                 id="name"
                 value={courseData.name}
@@ -105,7 +112,9 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">Description</Label>
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
               <Textarea
                 id="description"
                 value={courseData.description}
@@ -116,7 +125,9 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
             </div>
 
             <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="image" className="text-right pt-2">Course Image</Label>
+              <Label htmlFor="image" className="text-right pt-2">
+                Course Image
+              </Label>
               <div className="col-span-3">
                 <label
                   htmlFor="image"
@@ -147,7 +158,9 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="isActive" className="text-right">Active Status</Label>
+              <Label htmlFor="isActive" className="text-right">
+                Active Status
+              </Label>
               <div className="col-span-3 flex items-center space-x-2">
                 <Switch
                   id="isActive"
@@ -162,7 +175,9 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={isSubmitting || !!imageError}>
               {isSubmitting ? (
                 <>

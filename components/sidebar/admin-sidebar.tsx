@@ -52,19 +52,19 @@ export default function AdminSidebarPage() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 w-64 h-screen   border transform transition-transform duration-300 ease-in-out
+        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-white  border transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:block`}
       >
         <div className="flex flex-col h-full px-4 py-6 overflow-y-auto">
           {/* Logo and Title */}
-          <div className="flex items-center gap-3 mb-8 px-3">
+          <div className="flex items-center gap-2 mb-6 justify-cente ">
             <Image
               src="/images/Applogo.png" // Update this path as necessary
               alt="Online Exam Platform Logo"
               width={40}
               height={40}
             />
-            <h1 className="text-xl font-semibold">Online Exam</h1>
+            <h1 className=" text-xl text-indigo-600 font-semibold">Mock-Exam</h1>
           </div>
 
           {/* Menu Items */}
@@ -77,8 +77,8 @@ export default function AdminSidebarPage() {
                 <li key={item.name}>
                   <Link
                     href={item.path}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition 
-                      ${isActive ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition
+                      ${isActive ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-100'}`}
                   >
                     <Icon className="h-5 w-5" />
                     <span>{item.name}</span>

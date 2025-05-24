@@ -15,8 +15,8 @@ function StudentScorePage() {
   <div className="flex flex-col h-screen">
         <Header />  {/* takes full height */}
         <div className="flex h-screen">
-          <StudentSidebar />         {/* stays at top */}
-          <main className="flex-1 overflow-y-auto p-6 py-28 bg-gray-50"><StudentTest params={{ id: "some-id" }} /></main>
+              {/* stays at top */}
+          <main className="flex-1 overflow-y-auto p-6 py-28 bg-gray-100"><StudentTest params={{ id: `question` }} /></main>
         </div>
       </div>
   )

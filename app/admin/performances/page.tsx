@@ -15,7 +15,7 @@ function AdminQuestionPage() {
         <Header />  {/* takes full height */}
         <div className="flex h-screen">
           <AdminSidebarPage />         {/* stays at top */}
-          <main className="flex-1 overflow-y-auto p-6 bg-gray-50 py-28"><AdminPerformances/></main>
+          <main className="flex-1 overflow-y-auto p-6 bg-gray-100 py-28"><AdminPerformances/></main>
         </div>
       </div>
   )

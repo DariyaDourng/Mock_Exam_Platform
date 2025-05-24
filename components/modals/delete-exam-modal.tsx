@@ -11,21 +11,21 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
-interface DeleteCourseModalProps {
+interface DeleteExamModalProps {
   isOpen: boolean
   onClose: () => void
-  courseId: string | null
+  examId: string | null
   onDeleted: () => void
 }
 
-export function DeleteCourseModal({ isOpen, onClose, courseId, onDeleted }: DeleteCourseModalProps) {
+export function DeleteExamModal({ isOpen, onClose, examId, onDeleted }: DeleteExamModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Delete Course</DialogTitle>
+          <DialogTitle>Delete Exam</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this course? This action cannot be undone.
+            Are you sure you want to delete this exam? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

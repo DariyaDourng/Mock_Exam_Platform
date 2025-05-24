@@ -3,7 +3,7 @@ export const api = async (endpoint: string, options: RequestInit = {}) => {
     ...options,
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...(options.headers || {}),
     },
   })

@@ -33,6 +33,7 @@ interface EditCourseModalProps {
     description?: string
     isActive?: boolean
     status?: string
+    imageUrl?: string // Existing image URL from backend or storage
   }
 }
 
@@ -53,6 +54,9 @@ export function EditCourseModal({
     image: null as File | null,
   })
 
+  // State to hold existing image URL for preview
+  const [existingImage, setExistingImage] = useState<string | null>(null)
+
   useEffect(() => {
     if (courseData) {
       setFormData({
@@ -63,6 +67,9 @@ export function EditCourseModal({
         image: null,
       })
       setImageError(null)
+
+      // Set existing image URL from courseData if available
+      setExistingImage(courseData.imageUrl || null)
     }
   }, [courseData])
 
@@ -86,6 +93,8 @@ export function EditCourseModal({
     } else {
       setImageError(null)
       handleChange("image", file)
+      // Clear existing image preview because new image is chosen
+      setExistingImage(null)
     }
   }
 
@@ -155,13 +164,22 @@ export function EditCourseModal({
                   />
                 </label>
                 {imageError && <p className="text-red-500 text-xs mt-1">{imageError}</p>}
-                {formData.image && (
+
+                {/* Show preview */}
+                {formData.image ? (
                   <img
                     src={URL.createObjectURL(formData.image)}
                     alt="Preview"
                     className="mt-2 max-h-32 rounded border"
                   />
-                )}
+                ) : existingImage ? (
+                  <img
+                    src={existingImage}
+                    alt="Current Course Image"
+                    className="mt-2 max-h-32 rounded border"
+                  />
+                ) : null}
+
                 <p className="mt-1 text-xs text-muted-foreground">
                   Recommended size: 1280x720px. Max size: 2MB.
                 </p>
