@@ -4,8 +4,13 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ChoiceController;
+use App\Http\Controllers\ExamController;
+use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SubjectController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
@@ -99,4 +104,33 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('/roles/{id}/delete', 'destroy');
         Route::get('/roles/search', 'search');
     });
+
 });
+// Route::apiResource('subjects',SubjectController::class);
+Route::post('subjects',[SubjectController::class, 'store']);
+Route::get('subjects/{subject}',[SubjectController::class, 'show']);
+Route::get('subjects',[SubjectController::class, 'index']);
+Route::put('subjects/{subject}',[SubjectController::class, 'update']);
+Route::delete('subjects/{subject}',[SubjectController::class, 'destroy']);
+
+
+Route::post('exams', [ExamController::class, 'store']);
+Route::get('exams/{exam}', [ExamController::class, 'show']);
+Route::get('exams', [ExamController::class, 'index']);
+Route::put('exams/{exam}', [ExamController::class, 'update']);
+Route::delete('exams/{exam}', [ExamController::class, 'destroy']);
+
+
+Route::apiResource('questions', QuestionController::class);
+Route::delete('/exams/{exam}/questions/{question}');
+
+
+
+Route::get('/choices', [ChoiceController::class, 'index']);
+Route::get('/choices/{choice}', [ChoiceController::class, 'show']);
+Route::delete('/choices/{choice}', [ChoiceController::class, 'destroy']);
+Route::get('/questions/{question}/choices', [ChoiceController::class, 'choicesByQuestion']);
+Route::post('/questions/{question}/choices', [ChoiceController::class, 'storeOrUpdateChoices']);
+
+
+ Route::apiResource('categories', CategoryController::class);

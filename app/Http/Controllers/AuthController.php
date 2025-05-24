@@ -71,37 +71,52 @@ class AuthController extends Controller
         }
     }
 
-    public function login(Request $request)
-    {
-        try {
-            $credentials = $request->only('email', 'password');
+public function login(Request $request)
+{
+    try {
+        $credentials = $request->only('email', 'password');
 
-            // Attempt to log in
-            if (! $token = Auth::attempt($credentials)) {
-                return response()->json([
-                    'status'  => 'fail',
-                    'message' => 'Invalid credentials'
-                ], 401);
-            }
-
-            /** @var \App\Models\User $user */
-            // Check if user is email verified
-            $user = Auth::user();
-            // If email is verified, return the token
-            if (! $user->hasVerifiedEmail() || ! $user->is_active) {
-                return response()->json([
-                    'status' => 'fail',
-                    'message' => 'Please verify your email before logging in.'
-                ], 403);
-            }
-            return $this->respondWithToken($token);
-        } catch (\Exception $e) {
+        if (! $token = Auth::attempt($credentials)) {
             return response()->json([
                 'status'  => 'fail',
-                'message' => 'Something went wrong: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Invalid credentials'
+            ], 401);
         }
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (! $user->hasVerifiedEmail() || ! $user->is_active) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Please verify your email before logging in.'
+            ], 403);
+        }
+
+        // ✅ Set token as HTTP-only cookie
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Login successful',
+            'token' => $token
+        ])->cookie(
+            'token',
+            $token,         // JWT token value
+            1,             // Expire in 60 minutes
+            '/',            // Path
+            null,           // Domain (null = current domain)
+            true,           // Secure (true = HTTPS only)
+            true,           // HttpOnly (not accessible via JS)
+            false,          // Raw
+            'Strict'        // SameSite
+        );
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => 'fail',
+            'message' => 'Something went wrong: ' . $e->getMessage()
+        ], 500);
     }
+}
 
 
     public function user()

@@ -31,9 +31,6 @@ return new class extends Migration
             $table->string('otp')->nullable();
             $table->dateTime('otp_sent_at')->nullable();
             $table->dateTime('otp_verified_at')->nullable();
-
-            $table->timestamp('created_at');
-            $table->timpstamp('updated_at');
             $table->rememberToken();
             $table->timestamps();
         });

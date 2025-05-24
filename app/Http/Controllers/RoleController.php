@@ -5,14 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Response;
 
 class RoleController extends Controller
 {
     // Display a listing of the resource
-    public function index()
+   
+    
+      public function index()
     {
         $roles = Role::all();
-        return response()->json($roles, 200);
+
+        return response()->json([
+            'data'    => $roles,
+            'message' => 'All roles fetched successfully'
+        ], Response::HTTP_OK);
     }
 
     // Store a newly created resource in storage
