@@ -31,7 +31,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('admin123'),
                 'role_id' => $adminRole->id,
                 'gender' => 'Female',
-                'school_name' => 'Admin Institute',
+                // 'school_id' => 'Admin Institute',
                 'is_active' => 1,
                 'created_at' => now(),
           
@@ -42,7 +42,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('ousa123'),
                 'role_id' => $studentRole->id,
                 'gender' => 'Male',
-                'school_name' => 'NCT 127 Institute',
+                // 'school_id' => 'NCT 127 Institute',
                 'is_active' => 1,
                 'created_at' => now(),
                 

@@ -20,56 +20,111 @@ use App\Models\Role;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        try {
-            $request->validate([
-                'name'     => 'required|string|max:255',
-                'email'    => 'required|string|email|max:255|unique:users',
-                'password' => [
-                    'required',
-                    'confirmed',
-                    Password::min(8)
-                        ->mixedCase()        // Must include uppercase and lowercase
-                        ->letters()
-                        ->numbers()
-                        ->symbols()
-                        ->uncompromised(),   // Checks against known data breaches
-                ],
-                'gender'      => 'required|string|in:Male,Female,Other',
-                'school_name' => 'required|string|max:255',
-                'password_confirmation' => 'required|string|same:password',
-            ]);
+    // public function register(Request $request)
+    // {
+    //     try {
+    //         $request->validate([
+    //             'name'     => 'required|string|max:255',
+    //             'email'    => 'required|string|email|max:255|unique:users',
+    //             'password' => [
+    //                 'required',
+    //                 'confirmed',
+    //                 Password::min(8)
+    //                     ->mixedCase()        // Must include uppercase and lowercase
+    //                     ->letters()
+    //                     ->numbers()
+    //                     ->symbols()
+    //                     ->uncompromised(),   // Checks against known data breaches
+    //             ],
+    //             'gender'      => 'required|string|in:Male,Female,Other',
+    //             'school_id' => 'required|string|max:255',
+    //             'password_confirmation' => 'required|string|same:password',
+    //         ]);
 
-            $studentRole = Role::where('name', 'student')->first();
-            if (!$studentRole) {
-                return response()->json(['status' => 'fail', 'message' => 'Student role not found'], 500);
-            }
+    //         $studentRole = Role::where('name', 'student')->first();
+    //         if (!$studentRole) {
+    //             return response()->json(['status' => 'fail', 'message' => 'Student role not found'], 500);
+    //         }
 
-            $user = User::create([
-                'name'     => $request->name,
-                'email'    => $request->email,
-                'password' => Hash::make($request->password),
-                'role_id'  => $studentRole->id,
-                'gender'      => $request->gender,
-                'school_name' => $request->school_name,
-            ]);
+    //         $user = User::create([
+    //             'name'     => $request->name,
+    //             'email'    => $request->email,
+    //             'password' => Hash::make($request->password),
+    //             'role_id'  => $studentRole->id,
+    //             'gender'      => $request->gender,
+    //             'school_id' => $request->school_id,
+    //         ]);
 
-            // Send email verification
-            $user->sendEmailVerificationNotification();
+    //         // Send email verification
+    //         $user->sendEmailVerificationNotification();
 
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'User registered successfully. Please check your email to verify your account.',
-                'data'    => $user
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'fail',
-                'message' => 'Something went wrong: ' . $e->getMessage()
-            ], 500);
-        }
+    //         return response()->json([
+    //             'status'  => 'success',
+    //             'message' => 'User registered successfully. Please check your email to verify your account.',
+    //             'data'    => $user
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'fail',
+    //             'message' => 'Something went wrong: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+public function register(Request $request)
+{
+    try {
+        // Fetch role once (assuming student by default)
+        $studentRole = Role::where('name', 'student')->firstOrFail();
+
+        // Add dynamic validation rules
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|max:255|unique:users',
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(8)
+                    ->mixedCase()
+                    ->letters()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised(),
+            ],
+            'gender'   => 'required|string|in:Male,Female,Other',
+            'school_id' => [
+                'required',
+                'exists:schools,id'
+            ],
+            'password_confirmation' => 'required|string|same:password',
+        ]);
+
+        // Create user
+        $user = User::create([
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'password'  => Hash::make($validated['password']),
+            'gender'    => $validated['gender'],
+            'school_id' => $validated['school_id'],
+            'role_id'   => $studentRole->id,
+        ]);
+
+        // Send email verification
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'User registered successfully. Please check your email to verify your account.',
+            'data'    => $user
+        ], 201);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => 'fail',
+            'message' => 'Something went wrong: ' . $e->getMessage()
+        ], 500);
     }
+}
+
 
 public function login(Request $request)
 {
@@ -101,7 +156,7 @@ public function login(Request $request)
         ])->cookie(
             'token',
             $token,         // JWT token value
-            1,             // Expire in 60 minutes
+            60,             // Expire in 60 minutes
             '/',            // Path
             null,           // Domain (null = current domain)
             true,           // Secure (true = HTTPS only)
@@ -292,7 +347,7 @@ public function newPassword(Request $req)
     {
         try {
 
-            $user = User::select('id', 'name', 'email', 'phone_number', 'gender', 'school_name',  'is_active', 'role_id')
+            $user = User::select('id', 'name', 'email', 'phone_number', 'gender', 'school_id',  'is_active', 'role_id')
                 ->with(['role:id,name'])
                 ->findOrfail(Auth::user()->id);
 

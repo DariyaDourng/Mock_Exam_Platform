@@ -6,28 +6,41 @@ use Illuminate\Database\Eloquent\Model;
 
 class Question extends Model
 {
-    protected $fillable = ['question_text', 'subject_id', 'type'];
+    // The fillable attributes define which attributes can be mass-assigned
+    protected $fillable = [
+        'question_text',
+        'subject_id',
+        'type',
+        'format',
+        'question_image',
+        'points',
+        'explanation',
+    ];
 
+    // Relationship with the Subject model
     public function subject()
     {
         return $this->belongsTo(Subject::class);
     }
 
+    // Relationship with the Choice model (each question can have many choices)
     public function choices()
     {
         return $this->hasMany(Choice::class);
     }
 
-    public function exams() {
-    return $this->belongsToMany(Exam::class);
-}
+    // Relationship with the Exam model (many-to-many relationship)
+    public function exams()
+    {
+        return $this->belongsToMany(Exam::class);
+    }
 
-
-        protected static function booted()
+    // Automatically delete associated choices when a question is deleted
+    protected static function booted()
     {
         static::deleting(function ($question) {
+            // Delete associated choices when a question is deleted
             $question->choices()->delete();
         });
     }
-
 }

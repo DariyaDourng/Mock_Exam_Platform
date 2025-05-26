@@ -19,7 +19,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'password',
         'role_id',
         'gender',
-        'school_name',
+        'school_id',
         'is_active',
         'otp',
         'otp_sent_at',
@@ -73,6 +73,9 @@ public function sendEmailVerificationNotification()
     $this->notify(new CustomVerifyEmail());
 }
 
-  
+
+public function school(){
+    $this->belongsTo(School::class);
+}
 
 }

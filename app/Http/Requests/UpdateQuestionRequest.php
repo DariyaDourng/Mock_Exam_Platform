@@ -22,13 +22,29 @@ class UpdateQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
+    'subject_id' => ['sometimes', 'exists:subjects,id'],
+    'type' => ['sometimes', 'in:single-choice,multiple-choice,true-false'],
+    'format' => ['sometimes', 'in:text,image'],
+    'question_text' => ['sometimes', 'required_if:format,text', 'string', 'nullable'],
+    'question_image' => ['sometimes', 'required_if:format,image', 'image', 'max:5120', 'nullable'],
+    'points' => ['sometimes', 'numeric', 'min:0.5', 'max:100'],
+    'explanation' => ['nullable', 'string'],
+    'choices' => ['sometimes', 'array', 'min:2', 'max:8'],
+    'choices.*.choice_text' => ['required_with:choices', 'string'],
+    'choices.*.is_correct' => ['required_with:choices', 'boolean'],
+];
 
-         
-            'question_text' => 'sometimes|required|string',
-            'subject_id' => 'nullable|exists:subjects,id',
-            'type' => 'sometimes|required|string|in:multiple_choice,true_false',
-        
-            
-        ];
     }
+    protected function prepareForValidation()
+{
+    if ($this->has('choices') && is_string($this->choices)) {
+        $decoded = json_decode($this->choices, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $this->merge([
+                'choices' => $decoded,
+            ]);
+        }
+    }
+}
+
 }

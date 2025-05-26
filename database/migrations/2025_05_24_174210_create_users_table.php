@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('email')->unique()->index();
             $table->string('password');
             $table->string('gender')->nullable();
-            $table->string('school_name')->nullable();
+             $table->foreignId('school_id')->nullable()->references('id')->on('schools')->onDelete('cascade')->onUpdate('cascade');
             $table->boolean('is_active')->default(1);
 
             
@@ -55,8 +55,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
+        // Schema::dropIfExists('users');
+        // Schema::dropIfExists('password_reset_tokens');
+        // Schema::dropIfExists('sessions');
     }
 };

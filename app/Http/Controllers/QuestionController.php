@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreQuestionRequest;
 use App\Http\Requests\UpdateQuestionRequest;
 use App\Http\Resources\QuestionResource;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class QuestionController extends Controller
 {
@@ -26,26 +28,49 @@ class QuestionController extends Controller
 
     public function store(StoreQuestionRequest $request)
     {
+            \Log::info('Store method hit!');
         try {
+            // Decode choices JSON string if present
+            if ($request->has('choices') && is_string($request->choices)) {
+                $decoded = json_decode($request->choices, true);
+                if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                    return response()->json([
+                        'status' => 422,
+                        'message' => 'Invalid JSON format for choices.',
+                    ], 422);
+                }
+                $request->merge(['choices' => $decoded]);
+            }
+
             $data = $request->validated();
 
-            // Validate that exactly one choice is marked as correct
+            // Validate at least one correct answer
             $correctAnswers = collect($data['choices'])->where('is_correct', true)->count();
-            if ($correctAnswers !== 1) {
+            if ($correctAnswers < 1) {
                 return response()->json([
-                    'status' => false,
-                    'message' => 'There must be exactly one correct answer.',
+                    'status' => 422,
+                    'message' => 'Please select at least one correct answer.',
                 ], 422);
             }
 
-            // Create the question
+            // Handle image upload if format is image
+            $imagePath = null;
+            if (($data['format'] ?? null) === 'image' && $request->hasFile('question_image')) {
+                $imagePath = $request->file('question_image')->store('questions', 'public');
+            }
+
+            // Create question
             $question = Question::create([
                 'subject_id' => $data['subject_id'],
-                'question_text' => $data['question_text'],
                 'type' => $data['type'],
+                'format' => $data['format'],
+                'question_text' => $data['format'] === 'text' ? $data['question_text'] : null,
+                'question_image' => $imagePath,
+                'points' => $data['points'] ?? 1,
+                'explanation' => $data['explanation'] ?? null,
             ]);
 
-            // Create associated choices
+            // Create choices
             foreach ($data['choices'] as $choice) {
                 $question->choices()->create($choice);
             }
@@ -57,7 +82,7 @@ class QuestionController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false,
+                'status' => 500,
                 'message' => 'Internal Server Error',
                 'error' => $e->getMessage(),
             ], 500);
@@ -72,27 +97,61 @@ class QuestionController extends Controller
     public function update(UpdateQuestionRequest $request, Question $question)
     {
         try {
+            // Decode choices JSON string if present
+            if ($request->has('choices') && is_string($request->choices)) {
+                $decoded = json_decode($request->choices, true);
+                if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                    return response()->json([
+                        'status' => 422,
+                        'message' => 'Invalid JSON format for choices.',
+                    ], 422);
+                }
+                $request->merge(['choices' => $decoded]);
+            }
+
             $data = $request->validated();
 
-            // Update question data
-            $question->update([
-                'subject_id' => $data['subject_id'] ?? null,
-                'question_text' => $data['question_text'],
-            ]);
+            // Validate at least one correct answer if choices provided
+            if (!empty($data['choices'])) {
+                $correctAnswers = collect($data['choices'])->where('is_correct', true)->count();
+                if ($correctAnswers < 1) {
+                    return response()->json([
+                        'status' => 422,
+                        'message' => 'Please select at least one correct answer.',
+                    ], 422);
+                }
+            }
 
-            // Optionally update choices (if included)
+            // Handle image update if format is image
+            if (($data['format'] ?? null) === 'image' && $request->hasFile('question_image')) {
+                // Delete old image
+                if ($question->question_image) {
+                    Storage::disk('public')->delete($question->question_image);
+                }
+                $imagePath = $request->file('question_image')->store('questions', 'public');
+                $question->question_image = $imagePath;
+            } elseif (($data['format'] ?? null) === 'text') {
+                // Delete old image if switching to text format
+                if ($question->question_image) {
+                    Storage::disk('public')->delete($question->question_image);
+                    $question->question_image = null;
+                }
+            }
+
+            // Update question fields
+            $question->subject_id = $data['subject_id'] ?? $question->subject_id;
+            $question->type = $data['type'] ?? $question->type;
+            $question->format = $data['format'] ?? $question->format;
+            $question->question_text = ($data['format'] === 'text' && isset($data['question_text'])) ? $data['question_text'] : $question->question_text;
+            $question->points = $data['points'] ?? $question->points;
+            $question->explanation = $data['explanation'] ?? $question->explanation;
+
+            $question->save();
+
+            // Update choices if provided
             if (!empty($data['choices'])) {
                 // Delete old choices
                 $question->choices()->delete();
-
-                // Validate one correct choice
-                $correctAnswers = collect($data['choices'])->where('is_correct', true)->count();
-                if ($correctAnswers !== 1) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'There must be exactly one correct answer.',
-                    ], 422);
-                }
 
                 // Add new choices
                 foreach ($data['choices'] as $choice) {
@@ -107,7 +166,7 @@ class QuestionController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false,
+                'status' => 500,
                 'message' => 'Internal Server Error',
                 'error' => $e->getMessage(),
             ], 500);
@@ -117,6 +176,10 @@ class QuestionController extends Controller
     public function destroy(Question $question)
     {
         try {
+            // Delete image if exists
+            if ($question->question_image) {
+                Storage::disk('public')->delete($question->question_image);
+            }
             $question->delete();
 
             return response()->json([
@@ -125,7 +188,7 @@ class QuestionController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false,
+                'status' => 500,
                 'message' => 'Internal Server Error',
                 'error' => $e->getMessage(),
             ], 500);
