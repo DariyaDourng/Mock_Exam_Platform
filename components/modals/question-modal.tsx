@@ -1,7 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
+import { toast } from "react-hot-toast"
 import axios from "axios"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -10,19 +12,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Loader2, Plus, Trash2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
-import { toast } from "react-hot-toast"
+import { Plus, Minus, Upload, X, ImageIcon, Type } from "lucide-react"
 
 interface Option {
-  id: string
+  id: number
   text: string
+  isCorrect: boolean
 }
 
 interface Subject {
@@ -33,342 +35,530 @@ interface Subject {
 interface QuestionModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmitSuccess: () => void
-  questionId?: string | number
-  subjectName?: string
-  mode?: "create" | "edit"
+  onSave: (questionData: any) => void
+  question?: any
+  mode: "add" | "edit"
 }
 
-export function QuestionModal({
-  isOpen,
-  onClose,
-  onSubmitSuccess,
-  questionId,
-  subjectName,
-  mode,
-}: QuestionModalProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+export function QuestionModal({ isOpen, onClose, onSave, question, mode }: QuestionModalProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [subjects, setSubjects] = useState<Subject[]>([])
 
-  const [formData, setFormData] = useState({
-    id: "",
-    text: "",
-    subject_id: "",
-    options: [] as Option[],
-    correctAnswer: "", // important: initially empty so no forced 'a'
-    type: "multiple_choice",
-  })
+  // Loading state for async save
+  const [loading, setLoading] = useState(false)
 
-  // Load subjects on mount
   useEffect(() => {
     async function fetchSubjects() {
       try {
         const res = await axios.get("http://127.0.0.1:8000/api/subjects")
         setSubjects(res.data.data || [])
-      } catch (err) {
-        console.error("Failed to fetch subjects", err)
-        toast.error("Failed to load subjects")
+      } catch {
+        toast.error("Unable to fetch course list.")
       }
     }
     fetchSubjects()
   }, [])
 
-  // Load question and choices when questionId or subjects change
+  // Form states
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null)
+  const [questionType, setQuestionType] = useState("multiple-choice")
+  const [questionFormat, setQuestionFormat] = useState("text") // "text" or "image"
+  const [questionText, setQuestionText] = useState("")
+  const [questionImage, setQuestionImage] = useState<{ file: File | null; url: string; name: string } | null>(null)
+  const [points, setPoints] = useState(1)
+  const [explanation, setExplanation] = useState("")
+  const [options, setOptions] = useState<Option[]>([
+    { id: 1, text: "", isCorrect: false },
+    { id: 2, text: "", isCorrect: false },
+    { id: 3, text: "", isCorrect: false },
+    { id: 4, text: "", isCorrect: false },
+  ])
+
   useEffect(() => {
-    if (!questionId) {
-      // Reset form for new question
-      setFormData({
-        id: "",
-        text: "",
-        subject_id: "",
-        options: [
-          { id: "a", text: "" },
-          { id: "b", text: "" },
-          { id: "c", text: "" },
-          { id: "d", text: "" },
-        ],
-        correctAnswer: "a", // default selected option
-        type: "multiple_choice",
-      })
-      return
-    }
-
-    async function fetchQuestionAndChoices() {
-      setIsLoading(true)
-      try {
-        const questionRes = await axios.get(`http://127.0.0.1:8000/api/questions/${questionId}`)
-        const questionData = questionRes.data.data || questionRes.data
-
-        // fetch choices separately, because your backend routes have dedicated endpoint
-        const choicesRes = await axios.get(`http://127.0.0.1:8000/api/questions/${questionId}/choices`)
-        const choicesData = choicesRes.data.data || choicesRes.data || []
-
-        const options = choicesData.length > 0
-          ? choicesData.map((choice: any, idx: number) => ({
-              id: String.fromCharCode(97 + idx),
-              text: choice.choice_text,
+    if (question && mode === "edit") {
+      setSelectedSubjectId(question.subjectId || question.subject_id || null)
+      setQuestionType(question.type || "multiple-choice")
+      setQuestionFormat(question.format || "text")
+      setQuestionText(question.question || question.question_text || "")
+      setQuestionImage(
+        question.questionImage
+          ? {
+              file: null,
+              url:
+                typeof question.questionImage === "string"
+                  ? question.questionImage
+                  : question.questionImage.url || "",
+              name:
+                typeof question.questionImage === "string"
+                  ? ""
+                  : question.questionImage.name || "",
+            }
+          : null,
+      )
+      setPoints(question.points ?? 1)
+      setExplanation(question.explanation || "")
+      setOptions(
+        question.options?.length > 0
+          ? question.options.map((opt: any, idx: number) => ({
+              id: opt.id || idx + 1,
+              text: opt.text || opt.choice_text || "",
+              isCorrect: !!(opt.isCorrect ?? opt.is_correct),
             }))
           : [
-              { id: "a", text: "" },
-              { id: "b", text: "" },
-              { id: "c", text: "" },
-              { id: "d", text: "" },
-            ]
+              { id: 1, text: "", isCorrect: false },
+              { id: 2, text: "", isCorrect: false },
+              { id: 3, text: "", isCorrect: false },
+              { id: 4, text: "", isCorrect: false },
+            ],
+      )
+    } else if (!question && mode === "add") {
+      setSelectedSubjectId(null)
+      setQuestionType("multiple-choice")
+      setQuestionFormat("text")
+      setQuestionText("")
+      setQuestionImage(null)
+      setPoints(1)
+      setExplanation("")
+      setOptions([
+        { id: 1, text: "", isCorrect: false },
+        { id: 2, text: "", isCorrect: false },
+        { id: 3, text: "", isCorrect: false },
+        { id: 4, text: "", isCorrect: false },
+      ])
+    }
+  }, [question, mode])
 
-        // Find correct answer option id (like 'a', 'b', 'c', ...)
-        const correctChoiceIndex = choicesData.findIndex((c: any) => c.is_correct)
-        const correctAnswer = correctChoiceIndex !== -1
-          ? String.fromCharCode(97 + correctChoiceIndex)
-          : ""
-
-        setFormData({
-          id: questionData.id?.toString() || "",
-          text: questionData.question_text || "",
-          subject_id: questionData.subject_id?.toString() || "",
-          options,
-          correctAnswer,
-          type: questionData.type || "multiple_choice",
-        })
-      } catch (error: any) {
-        console.error(error)
-        toast.error(error.message || "Failed to fetch question")
-      } finally {
-        setIsLoading(false)
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Please select an image smaller than 5MB.")
+        return
       }
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setQuestionImage({
+          file,
+          url: e.target?.result as string,
+          name: file.name,
+        })
+      }
+      reader.readAsDataURL(file)
     }
-
-    if (subjects.length > 0) {
-      fetchQuestionAndChoices()
-    }
-  }, [questionId, isOpen, subjects])
-
-  const handleChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleOptionChange = (index: number, value: string) => {
-    const updatedOptions = [...formData.options]
-    updatedOptions[index] = { ...updatedOptions[index], text: value }
-    setFormData((prev) => ({ ...prev, options: updatedOptions }))
+  const removeImage = () => {
+    setQuestionImage(null)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  const handleOptionTextChange = (id: number, text: string) => {
+    setOptions((opts) => opts.map((opt) => (opt.id === id ? { ...opt, text } : opt)))
+  }
+
+  const handleCorrectOptionChange = (id: number, isCorrect: boolean) => {
+    if (questionType === "single-choice" || questionType === "true-false") {
+      setOptions((opts) =>
+        opts.map((opt) => ({
+          ...opt,
+          isCorrect: opt.id === id ? isCorrect : false,
+        })),
+      )
+    } else {
+      setOptions((opts) => opts.map((opt) => (opt.id === id ? { ...opt, isCorrect } : opt)))
+    }
   }
 
   const addOption = () => {
-    if (formData.options.length >= 6) return
-    const nextId = String.fromCharCode(97 + formData.options.length)
-    setFormData((prev) => ({
-      ...prev,
-      options: [...prev.options, { id: nextId, text: "" }],
-    }))
+    if (options.length >= 8) {
+      toast.error("You can't add more than 8 options.")
+      return
+    }
+    const newId = options.length > 0 ? Math.max(...options.map((o) => o.id)) + 1 : 1
+    setOptions((opts) => [...opts, { id: newId, text: "", isCorrect: false }])
   }
 
-  const removeOption = (index: number) => {
-    if (formData.options.length <= 2) return
-    const updatedOptions = formData.options.filter((_, i) => i !== index)
-    const newCorrect =
-      formData.correctAnswer === formData.options[index].id
-        ? updatedOptions[0].id
-        : formData.correctAnswer
-    setFormData((prev) => ({ ...prev, options: updatedOptions, correctAnswer: newCorrect }))
+  const removeOption = (id: number) => {
+    if (options.length <= 2) {
+      toast.error("You need at least 2 options for a question.")
+      return
+    }
+    setOptions((opts) => opts.filter((opt) => opt.id !== id))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const isFormValid = () => {
+    if (!selectedSubjectId) return false
+    if (questionFormat === "text" && !questionText.trim()) return false
+    if (questionFormat === "image" && !questionImage) return false
+    if (options.some((opt) => !opt.text.trim())) return false
+    if (!options.some((opt) => opt.isCorrect)) return false
+    if (points < 0.5 || points > 100) return false
+    return true
+  }
 
+  const pointOptions = [
+    0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5,
+    6, 7, 8, 9, 10,
+    15, 20, 25, 30, 40, 50, 75, 100,
+  ]
+
+  const handleSave = async () => {
+    if (!isFormValid()) {
+      toast.error("Please fill in all required fields and ensure at least one correct answer is selected.")
+      return
+    }
+    setLoading(true)
     try {
-      const hasValidOptions = formData.options.every((opt) => opt.text.trim() !== "")
-      if (!formData.text.trim() || !formData.type || !hasValidOptions) {
-        throw new Error("Please fill all required fields, including at least one valid answer choice.")
+      const payload: any = {
+        subject_id: selectedSubjectId,
+        type: questionType,
+        format: questionFormat,
+        points,
+        explanation,
+        choices: options.map((opt) => ({
+          choice_text: opt.text,
+          is_correct: opt.isCorrect,
+        })),
       }
+      if (questionFormat === "text") payload.question_text = questionText
 
-      // 1) Update question core data (text, type, subject)
-      const questionPayload = {
-        question_text: formData.text,
-        type: formData.type,
-        subject_id: parseInt(formData.subject_id),
-      }
+      if (questionFormat === "image" && questionImage?.file) {
+        const formDataToSend = new FormData()
+        Object.entries(payload).forEach(([key, val]) => {
+          if (key !== "choices") {
+            formDataToSend.append(key, val as any)
+          }
+        })
+        formDataToSend.append("question_image", questionImage.file)
+        formDataToSend.append("choices", JSON.stringify(payload.choices))
 
-      if (formData.id) {
-        await axios.put(`http://127.0.0.1:8000/api/questions/${formData.id}`, questionPayload)
-
-        // 2) Update choices separately (your backend has separate route for this)
-        const choicesPayload = {
-          choices: formData.options.map((opt) => ({
-            choice_text: opt.text,
-            is_correct: opt.id === formData.correctAnswer,
-          })),
+        if (mode === "add") {
+          await axios.post("http://127.0.0.1:8000/api/questions", formDataToSend, {
+            headers: { "Content-Type": "multipart/form-data" },
+          })
+        } else if (mode === "edit" && question?.id) {
+          await axios.post(`http://127.0.0.1:8000/api/questions/${question.id}`, formDataToSend, {
+            headers: { "Content-Type": "multipart/form-data" },
+            params: { _method: "PUT" },
+          })
         }
-        await axios.post(`http://127.0.0.1:8000/api/questions/${formData.id}/choices`, choicesPayload)
       } else {
-        // For create: send everything in one call if backend supports it
-        const createPayload = {
-          ...questionPayload,
-          choices: formData.options.map((opt) => ({
-            choice_text: opt.text,
-            is_correct: opt.id === formData.correctAnswer,
-          })),
+        if (mode === "add") {
+          await axios.post("http://127.0.0.1:8000/api/questions", payload)
+        } else if (mode === "edit" && question?.id) {
+          await axios.put(`http://127.0.0.1:8000/api/questions/${question.id}`, payload)
         }
-        await axios.post(`http://127.0.0.1:8000/api/questions`, createPayload)
       }
-
-      toast.success(formData.id ? "Question updated successfully" : "Question added successfully")
-      onSubmitSuccess()
-      onClose()
-    } catch (err: any) {
-      console.error("Submit error:", err.message || err)
-      toast.error("Submit error: " + (err.message || "Unknown error"))
+      toast.success(mode === "add" ? "Question added successfully" : "Question updated successfully")
+      onSave(null)
+      handleClose()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message || "Unknown error")
     } finally {
-      setIsSubmitting(false)
+      setLoading(false)
     }
   }
 
-  if (isLoading) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto flex justify-center items-center py-20">
-          <DialogHeader>
-            <DialogTitle>Loading...</DialogTitle>
-            <DialogDescription>Fetching question data</DialogDescription>
-          </DialogHeader>
-          <Loader2 className="animate-spin h-8 w-8 text-gray-500" />
-        </DialogContent>
-      </Dialog>
-    )
+  const handleClose = () => {
+    setSelectedSubjectId(null)
+    setQuestionType("multiple-choice")
+    setQuestionFormat("text")
+    setQuestionText("")
+    setQuestionImage(null)
+    setPoints(1)
+    setExplanation("")
+    setOptions([
+      { id: 1, text: "", isCorrect: false },
+      { id: 2, text: "", isCorrect: false },
+      { id: 3, text: "", isCorrect: false },
+      { id: 4, text: "", isCorrect: false },
+    ])
+    onClose()
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>{mode === "edit" ? "Edit Question" : "Add New Question"}</DialogTitle>
-            <DialogDescription>
-              {mode === "edit"
-                ? "Update the question details and answer options."
-                : `Create a new question${subjectName ? ` for subject: ${subjectName}` : ""}.`}
-            </DialogDescription>
-          </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto px-6 py-6">
+        <DialogHeader>
+          <DialogTitle>{mode === "add" ? "Add New Question" : "Edit Question"}</DialogTitle>
+          <DialogDescription>
+            {mode === "add" ? "Create a new question for the exam." : "Edit the question details."}
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="subject" className="text-right">
-                Course
-              </Label>
+        <div className="space-y-6">
+          {/* Select Course */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-3">
+              <Label htmlFor="subject-select">Select Course</Label>
               <Select
-                value={formData.subject_id}
-                onValueChange={(value) => handleChange("subject_id", value)}
+                value={selectedSubjectId ? selectedSubjectId.toString() : ""}
+                onValueChange={(val) => setSelectedSubjectId(Number(val))}
               >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select Course" />
+                <SelectTrigger>
+                  <SelectValue placeholder="Select course" />
                 </SelectTrigger>
                 <SelectContent>
-                  {subjects.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
+                  {subjects.map((subj) => (
+                    <SelectItem key={subj.id} value={subj.id.toString()}>
+                      {subj.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="text" className="text-right pt-2">
-                Question Text
-              </Label>
-              <Textarea
-                id="text"
-                value={formData.text}
-                onChange={(e) => handleChange("text", e.target.value)}
-                className="col-span-3"
-                rows={3}
-                required
-                placeholder="Enter the question text here..."
-              />
-            </div>
-
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right">
-                Question Type
-              </Label>
-              <Select value={formData.type} onValueChange={(value) => handleChange("type", value)}>
-                <SelectTrigger id="type" className="col-span-3">
-                  <SelectValue placeholder="Select question type" />
+          {/* Question Type, Format, Points */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="question-type">Question Type</Label>
+              <Select value={questionType} onValueChange={setQuestionType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-                  <SelectItem value="true_false">True/False</SelectItem>
+                  <SelectItem value="single-choice">Single Choice</SelectItem>
+                  <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+                  <SelectItem value="true-false">True/False</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label className="text-right pt-2">Answer Options</Label>
-              <div className="col-span-3 space-y-3">
-                <Card>
-                  <CardContent className="pt-6">
-                    <RadioGroup
-                      value={formData.correctAnswer}
-                      onValueChange={(value) => handleChange("correctAnswer", value)}
-                      className="space-y-3"
-                    >
-                      {formData.options.map((option, index) => (
-                        <div key={option.id} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.id} id={`option-${option.id}`} />
-                          <div className="flex flex-1 items-center space-x-2">
-                            <Label htmlFor={`option-${option.id}`} className="w-6 flex-shrink-0">
-                              {option.id.toUpperCase()}.
-                            </Label>
-                            <Input
-                              value={option.text}
-                              onChange={(e) => handleOptionChange(index, e.target.value)}
-                              placeholder={`Option ${option.id.toUpperCase()}`}
-                              className="flex-1"
-                              required
-                            />
-                            {formData.options.length > 2 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeOption(index)}
-                                className="h-8 w-8 flex-shrink-0"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Remove option</span>
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                    {formData.options.length < 6 && (
-                      <Button type="button" variant="outline" size="sm" onClick={addOption} className="mt-3 w-full">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Option
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-                <p className="text-xs text-muted-foreground">
-                  Select the radio button next to the correct answer. You can add up to 6 options.
-                </p>
-              </div>
+            <div>
+              <Label htmlFor="question-format">Question Format</Label>
+              <Select value={questionFormat} onValueChange={setQuestionFormat}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="text">Text Question</SelectItem>
+                  <SelectItem value="image">Image Question</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="points">Points</Label>
+              <Select value={points.toString()} onValueChange={(val) => setPoints(Number(val))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select points" />
+                </SelectTrigger>
+                <SelectContent>
+                  {pointOptions.map((pt) => (
+                    <SelectItem key={pt} value={pt.toString()}>
+                      {pt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {formData.id ? "Updating..." : "Creating..."}
-                </>
-              ) : formData.id ? "Update Question" : "Add Question"}
+          {/* Question Content */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              {questionFormat === "text" ? <Type className="h-5 w-5" /> : <ImageIcon className="h-5 w-5" />}
+              <Label>Question Content</Label>
+            </div>
+
+            {questionFormat === "text" ? (
+              <Textarea
+                placeholder="Enter your question here..."
+                value={questionText}
+                onChange={(e) => setQuestionText(e.target.value)}
+                className="min-h-[100px]"
+                required
+              />
+            ) : (
+              <div className="space-y-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+
+                {questionImage ? (
+                  <Card>
+                    <CardContent className="p-4 relative">
+                      <img
+                        src={questionImage.url}
+                        alt="Question"
+                        className="max-w-full h-auto max-h-64 mx-auto rounded-lg"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={removeImage}
+                        disabled={loading}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <p className="text-sm text-muted-foreground mt-2 text-center">{questionImage.name}</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-dashed cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                    <CardContent className="p-8 text-center">
+                      <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground mb-4">Upload an image for your question</p>
+                      <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={loading}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Choose Image
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">Maximum file size: 5MB</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Answer Options */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Answer Options</Label>
+              <div className="text-sm text-muted-foreground">
+                {questionType === "single-choice" || questionType === "true-false"
+                  ? "Select one correct answer"
+                  : "Select one or more correct answers"}
+              </div>
+            </div>
+
+            {questionType === "single-choice" || questionType === "true-false" ? (
+              <RadioGroup
+                value={options.find((o) => o.isCorrect)?.id.toString() || ""}
+                onValueChange={(val) => handleCorrectOptionChange(Number(val), true)}
+                className="space-y-3"
+              >
+                {options.map((option, index) => {
+                  const label = String.fromCharCode(65 + index) // 'A', 'B', 'C', ...
+                  return (
+                    <div key={option.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <RadioGroupItem
+                        id={`option-${option.id}`}
+                        value={option.id.toString()}
+                        className="mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <Label
+                          htmlFor={`option-${option.id}`}
+                          className="text-sm font-medium mb-1 block truncate"
+                        >
+                          Option {label}
+                          {option.isCorrect && (
+                            <span className="ml-2 text-green-600 text-xs font-normal">(Correct)</span>
+                          )}
+                        </Label>
+                        <Input
+                          value={option.text}
+                          onChange={(e) => handleOptionTextChange(option.id, e.target.value)}
+                          placeholder={`Enter option ${label}`}
+                          required
+                          disabled={loading}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeOption(option.id)}
+                        disabled={options.length <= 2 || loading}
+                        aria-label={`Remove option ${label}`}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )
+                })}
+              </RadioGroup>
+            ) : (
+              <div className="space-y-3">
+                {options.map((option, index) => {
+                  const label = String.fromCharCode(65 + index) // 'A', 'B', 'C', ...
+                  return (
+                    <div key={option.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <Checkbox
+                        id={`option-${option.id}`}
+                        checked={option.isCorrect}
+                        onCheckedChange={(checked) =>
+                          handleCorrectOptionChange(option.id, checked as boolean)
+                        }
+                        className="mt-1"
+                        disabled={loading}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <Label
+                          htmlFor={`option-${option.id}`}
+                          className="text-sm font-medium mb-1 block truncate"
+                        >
+                          Option {label}
+                          {option.isCorrect && (
+                            <span className="ml-2 text-green-600 text-xs font-normal">(Correct)</span>
+                          )}
+                        </Label>
+                        <Input
+                          value={option.text}
+                          onChange={(e) => handleOptionTextChange(option.id, e.target.value)}
+                          placeholder={`Enter option ${label}`}
+                          required
+                          disabled={loading}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeOption(option.id)}
+                        disabled={options.length <= 2 || loading}
+                        aria-label={`Remove option ${label}`}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addOption}
+              disabled={options.length >= 8 || loading}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Option
             </Button>
-          </DialogFooter>
-        </form>
+          </div>
+
+          {/* Explanation */}
+          <div className="space-y-2">
+            <Label htmlFor="explanation">Explanation (Optional)</Label>
+            <Textarea
+              id="explanation"
+              placeholder="Provide an explanation for the correct answer(s)..."
+              value={explanation}
+              onChange={(e) => setExplanation(e.target.value)}
+              className="min-h-[80px]"
+              disabled={loading}
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={handleClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={!isFormValid() || loading}>
+            {loading ? (mode === "add" ? "Adding..." : "Saving...") : mode === "add" ? "Add Question" : "Save Changes"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

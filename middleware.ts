@@ -9,19 +9,19 @@ export function middleware(request: NextRequest) {
   const isAuthPage = pathname === '/login'
 
   // Not logged in and trying to access protected routes
-  if (!token && pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+//   if (!token && pathname.startsWith('/dashboard')) {
+//     return NextResponse.redirect(new URL('/login', request.url))
+//   }
 
-  // Logged in and trying to access /login again
-  if (token && isAuthPage) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+//   // Logged in and trying to access /login again
+//   if (token && isAuthPage) {
+//     return NextResponse.redirect(new URL('/dashboard', request.url))
+//   }
 
-  return NextResponse.next()
-}
+//   return NextResponse.next()
+// }
 
 
-export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+// export const config = {
+//   matcher: ['/dashboard/:path*', '/login'],
 }

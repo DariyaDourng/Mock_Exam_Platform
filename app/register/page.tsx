@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import axios from 'axios';
@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import { useRouter } from 'next/navigation';
+
 const RegisterPage: React.FC = () => {
   const [form, setForm] = useState({
     name: '',
@@ -22,7 +24,7 @@ const RegisterPage: React.FC = () => {
     password: '',
     confirmPassword: '',
     gender: '',
-    school: '',
+    schoolId: '',
   });
 
   const [errors, setErrors] = useState({
@@ -32,17 +34,18 @@ const RegisterPage: React.FC = () => {
   });
 
   const [confirmTouched, setConfirmTouched] = useState(false);
-
-  // Password visibility state
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [schools, setSchools] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
 
   const checkEmailExists = debounce(async (email: string) => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setErrors((prev) => ({ ...prev, email: '' }));
       return;
     }
-
     try {
       const res = await axios.post('http://localhost:8000/api/check-email', { email });
       setErrors((prev) => ({
@@ -69,7 +72,6 @@ const RegisterPage: React.FC = () => {
           ? ''
           : 'Password must be at least 8 characters, include uppercase, lowercase, number, and symbol.',
       }));
-
       setConfirmTouched(false);
       setErrors((prev) => ({ ...prev, confirmPassword: '' }));
     }
@@ -89,11 +91,13 @@ const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (form.password !== form.confirmPassword) {
       toast.error('Passwords do not match!');
       return;
     }
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
       const res = await axios.post('http://localhost:8000/api/register', {
@@ -102,20 +106,38 @@ const RegisterPage: React.FC = () => {
         password: form.password,
         password_confirmation: form.confirmPassword,
         gender: form.gender,
-        school_name: form.school,
+        school_id: form.schoolId,
       });
 
       toast.success(res.data.message || 'Registered successfully. Please verify your email.');
       setErrors({ password: '', email: '', confirmPassword: '' });
       setConfirmTouched(false);
-      // Optionally reset form here
+
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     } catch (err: any) {
       const messages = err?.response?.data?.errors
         ? Object.values(err.response.data.errors).flat().join('\n')
         : 'Registration failed.';
       toast.error(messages);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    axios.get('http://localhost:8000/api/schools')
+      .then(res => {
+        const schoolsData = Array.isArray(res.data) ? res.data : res.data.data;
+        const sorted = [...schoolsData].sort((a, b) => a.name.localeCompare(b.name));
+        setSchools(sorted);
+      })
+      .catch(err => {
+        console.error('Failed to fetch schools:', err);
+        toast.error('Failed to load schools.');
+      });
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -151,7 +173,34 @@ const RegisterPage: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <InputField label="School Name" name="school" value={form.school} onChange={handleChange} required />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                School <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={form.schoolId}
+                onValueChange={(value) => setForm({ ...form, schoolId: value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select your school" />
+                </SelectTrigger>
+                <SelectContent>
+                  {!Array.isArray(schools) || schools.length === 0 ? (
+                    <SelectItem value="loading" disabled>
+                      Loading schools...
+                    </SelectItem>
+                  ) : (
+                    schools.map((school) => (
+                      <SelectItem key={school.id} value={String(school.id)}>
+                        {school.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
             <InputFieldWithToggle
               label="Password"
               name="password"
@@ -173,9 +222,10 @@ const RegisterPage: React.FC = () => {
 
             <button
               type="submit"
-              className="rounded-md w-full py-2 px-4 bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
+              disabled={isSubmitting}
+              className="rounded-md w-full py-2 px-4 bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign Up
+              {isSubmitting ? 'Sign UP...' : 'Sign Up'}
             </button>
           </form>
 
@@ -188,8 +238,7 @@ const RegisterPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="hidden lg:flex flex-col justify-center items-center flex-1 bg-indigo-600
-       text-white p-10">
+      <div className="hidden lg:flex flex-col justify-center items-center flex-1 bg-indigo-600 text-white p-10">
         <Image src="/images/Applogo.png" alt="Mock Exam Platform" width={300} height={300} />
         <h2 className="mt-6 text-2xl font-bold">Mock Exam Platform</h2>
       </div>
@@ -197,7 +246,6 @@ const RegisterPage: React.FC = () => {
   );
 };
 
-// InputField with toggle eye icon for password fields
 const InputFieldWithToggle = ({
   label,
   name,
@@ -242,7 +290,6 @@ const InputFieldWithToggle = ({
   </div>
 );
 
-// Simple InputField component for normal inputs
 const InputField = ({
   label,
   name,
