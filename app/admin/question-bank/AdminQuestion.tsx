@@ -40,8 +40,18 @@ import { QuestionModal } from "@/components/modals/question-modal";
 import { DeleteQuestionModal } from "@/components/modals/delete-question-modal";
 import { UpdateQuestionModal } from "@/components/modals/UpdateQuestionModal";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation"
 
 export default function QuestionBankPage() {
+  const router = useRouter();
+    const handlePreviewClick = (question: any) => {
+  if (!question || !question.id) {
+    // maybe show an alert or just ignore click if no id yet
+    return
+  }
+  router.push(`/admin/question-bank/${question.id}`)
+}
+
   const [questions, setQuestions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
@@ -100,6 +110,8 @@ export default function QuestionBankPage() {
   useEffect(() => {
     fetchQuestions();
   }, []);
+
+  
 
   // Filter questions by search and subject
   const filteredQuestions = questions.filter((question) => {
@@ -289,7 +301,7 @@ export default function QuestionBankPage() {
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handlePreviewClick(question)}  className="cursor-pointer">
                                 <Eye className="mr-2 h-4 w-4" />
                                 Preview
                               </DropdownMenuItem>
