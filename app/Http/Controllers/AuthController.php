@@ -126,52 +126,107 @@ public function register(Request $request)
 }
 
 
-public function login(Request $request)
-{
-    try {
-        $credentials = $request->only('email', 'password');
+// public function login(Request $request)
+// {
+//     try {
+//         $credentials = $request->only('email', 'password');
 
-        if (! $token = Auth::attempt($credentials)) {
+//         if (! $token = Auth::attempt($credentials)) {
+//             return response()->json([
+//                 'status'  => 'fail',
+//                 'message' => 'Invalid credentials'
+//             ], 401);
+//         }
+
+//         /** @var \App\Models\User $user */
+//         $user = Auth::user();
+
+//         if (! $user->hasVerifiedEmail() || ! $user->is_active) {
+//             return response()->json([
+//                 'status' => 'fail',
+//                 'message' => 'Please verify your email before logging in.'
+//             ], 403);
+//         }
+
+//         // ✅ Set token as HTTP-only cookie
+//         return response()->json([
+//             'status'  => 'success',
+//             'message' => 'Login successful',
+//             'token' => $token
+//         ])->cookie(
+//             'token',
+//             $token,         // JWT token value
+//             60,             // Expire in 60 minutes
+//             '/',            // Path
+//             null,           // Domain (null = current domain)
+//             true,           // Secure (true = HTTPS only)
+//             true,           // HttpOnly (not accessible via JS)
+//             false,          // Raw
+//             'Strict'        // SameSite
+//         );
+
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'status'  => 'fail',
+//             'message' => 'Something went wrong: ' . $e->getMessage()
+//         ], 500);
+//     }
+// }'
+
+
+
+    // Your existing login method
+    public function login(Request $request)
+    {
+        try {
+            $credentials = $request->only('email', 'password');
+
+            if (! $token = Auth::attempt($credentials)) {
+                return response()->json([
+                    'status'  => 'fail',
+                    'message' => 'Invalid credentials'
+                ], 401);
+            }
+
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            if (! $user->hasVerifiedEmail() || ! $user->is_active) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Please verify your email before logging in.'
+                ], 403);
+            }
+
+            // Return token as HttpOnly cookie (not accessible via JS)
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Login successful',
+                'token' => $token
+            ])->cookie(
+                'token',
+                $token,         // JWT token value
+                60,             // Expire in 60 minutes
+                '/',            // Path
+                null,           // Domain (null = current domain)
+                true,           // Secure (HTTPS only)
+                true,           // HttpOnly (not accessible via JS)
+                false,          // Raw
+                'Strict'        // SameSite
+            );
+
+        } catch (\Exception $e) {
             return response()->json([
                 'status'  => 'fail',
-                'message' => 'Invalid credentials'
-            ], 401);
+                'message' => 'Something went wrong: ' . $e->getMessage()
+            ], 500);
         }
-
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        if (! $user->hasVerifiedEmail() || ! $user->is_active) {
-            return response()->json([
-                'status' => 'fail',
-                'message' => 'Please verify your email before logging in.'
-            ], 403);
-        }
-
-        // ✅ Set token as HTTP-only cookie
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Login successful',
-            'token' => $token
-        ])->cookie(
-            'token',
-            $token,         // JWT token value
-            60,             // Expire in 60 minutes
-            '/',            // Path
-            null,           // Domain (null = current domain)
-            true,           // Secure (true = HTTPS only)
-            true,           // HttpOnly (not accessible via JS)
-            false,          // Raw
-            'Strict'        // SameSite
-        );
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status'  => 'fail',
-            'message' => 'Something went wrong: ' . $e->getMessage()
-        ], 500);
     }
-}
+
+    // Add this method for user info endpoint
+    
+
+
 
 
     public function user()
@@ -347,7 +402,7 @@ public function newPassword(Request $req)
     {
         try {
 
-            $user = User::select('id', 'name', 'email', 'phone_number', 'gender', 'school_id',  'is_active', 'role_id')
+            $user = User::select('id', 'name', 'email', 'gender', 'school_id',  'is_active', 'role_id')
                 ->with(['role:id,name'])
                 ->findOrfail(Auth::user()->id);
 
@@ -394,7 +449,7 @@ public function newPassword(Request $req)
                 'is_active' => 'required'
             ]);
 
-            $user = User::select('id', 'name', 'email', 'phone_number', 'address', 'is_active', 'role_id', 'password')
+            $user = User::select('id', 'name', 'email', 'is_active', 'role_id', 'password')
                 ->findOrfail(Auth::user()->id);
 
 
@@ -407,8 +462,8 @@ public function newPassword(Request $req)
 
             $user->name          = $request->name;
             $user->email         = $request->email;
-            $user->phone_number  = $request->phone_number ?? null;
-            $user->address       = $request->address ?? null;
+            $user->gender        = $request->gender ?? null;
+            // $user->school_name    = $request->school_name ?? null;
             $user->is_active     = $request->is_active;
 
             if ($request->current_password && $request->new_password) {

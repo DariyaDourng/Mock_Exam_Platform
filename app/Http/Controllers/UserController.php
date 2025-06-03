@@ -9,6 +9,8 @@ use Illuminate\Http\Response;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Hash;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class UserController extends Controller
 {
@@ -22,7 +24,7 @@ class UserController extends Controller
             $perPage = $request->get('per_page', 10);
 
             $postions = User::query()
-            ->select('id', 'name', 'email', 'phone_number', 'address', 'is_active', 'role_id')
+            ->select('id', 'name', 'email', 'gender', 'school_name', 'is_active', 'role_id')
             ->with(['role:id,name'])
             ->paginate($perPage);
 
@@ -61,8 +63,8 @@ class UserController extends Controller
                 'email'         => $request->email,
                 'password'      => Hash::make($request->password),
                 'role_id'       => $request->role_id,
-                'phone_number'  => $request->phone_number,
-                'address'       => $request->address,
+                'gender'        => $request->gender,
+                'school_name'   => $request->school_name,
                 'is_active'     => $request->is_active
             ]);
 
@@ -88,7 +90,7 @@ class UserController extends Controller
     {
         try {
 
-            $user = User::select('id', 'name', 'email', 'phone_number', 'address', 'is_active', 'role_id')
+            $user = User::select('id', 'name', 'email', 'is_active', 'role_id')
             ->with(['role:id,name'])
             ->findOrfail($id);
 
@@ -137,7 +139,7 @@ class UserController extends Controller
 
             ]);
 
-            $user = User::select('id', 'name', 'email', 'phone_number', 'address', 'is_active', 'role_id')
+            $user = User::select('id', 'name', 'email', 'gender', 'school_name', 'is_active', 'role_id')
             ->with(['role:id,name'])
             ->findOrfail($id);
 
@@ -149,8 +151,8 @@ class UserController extends Controller
                 ], 500);
             }
 
-            if ($request->phone_number){
-                $u = User::where('phone_number', $request->phone_number)->first();
+            if ($request->school_name){
+                $u = User::where('school_name', $request->school_name)->first();
                 if ($u && $u->id != $user->id){
                     return response()->json([
                         'status'  => 'fail',
@@ -161,8 +163,8 @@ class UserController extends Controller
             $user->name          = $request->name;
             $user->email         = $request->email;
             $user->role_id       = $request->role_id;
-            $user->phone_number  = $request->phone_number??null;
-            $user->address       = $request->address??null;
+            $user->gender        = $request->gender??null;
+            $user->school_name   = $request->school??null;
             $user->is_active     = $request->is_active;
 
             if($request->new_password ){
@@ -193,7 +195,36 @@ class UserController extends Controller
             ], 500);
         }
     }
+    //      public function userInfo(Request $request)
+    // {
+    //     $token = $request->cookie('token');
+    //     if (!$token) {
+    //         return response()->json(['message' => 'Unauthorized'], 401);
+    //     }
 
+    //     try {
+    //         $secretKey = env('JWT_SECRET');  // your JWT secret key
+    //         $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+
+    //         $userId = $decoded->sub ?? null;
+    //         if (!$userId) {
+    //             return response()->json(['message' => 'Invalid token'], 401);
+    //         }
+
+    //         $user = User::find($userId);
+    //         if (!$user) {
+    //             return response()->json(['message' => 'User not found'], 404);
+    //         }
+
+    //         return response()->json([
+    //             'userId' => $user->id,
+    //             'name' => $user->name,
+    //             // other user info if needed
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['message' => 'Token invalid or expired'], 401);
+    //     }
+    // }
 
 
     /**
@@ -203,7 +234,7 @@ class UserController extends Controller
     {
         try {
 
-            $user = User::select('id', 'name', 'email', 'phone_number', 'address', 'is_active', 'role_id')
+            $user = User::select('id', 'name', 'email', 'gender', 'school_name', 'is_active', 'role_id')
             ->with(['role:id,name'])
             ->findOrfail($id);
 
@@ -247,7 +278,7 @@ class UserController extends Controller
             $byName = $request->name??null;
             $byRole = $request->role??null;
 
-            $user = User::select('id', 'name', 'email', 'phone_number', 'address', 'is_active', 'role_id')
+            $user = User::select('id', 'name', 'email', 'gender', 'school_name', 'is_active', 'role_id')
             ->with(['role:id,name']);
 
             if ($byEmail){

@@ -2,16 +2,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Exam;
-use App\Http\Requests\ExamRequest;
+use App\Models\Question;
 use App\Http\Requests\StoreExamRequest;
 use App\Http\Requests\UpdateExamRequest;
 use App\Http\Resources\ExamResource;
-use App\Models\Question;
-use App\Models\Subject;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 
 class ExamController extends Controller
 {
+    // List all exams with their subjects
     public function index()
     {
         $exams = Exam::with('subject')->latest()->get();
@@ -26,6 +26,7 @@ class ExamController extends Controller
         ], 200);
     }
 
+    // Create new exam
     public function store(StoreExamRequest $request)
     {
         try {
@@ -45,37 +46,44 @@ class ExamController extends Controller
         }
     }
 
-// public function show(Exam $exam)
-// {
-//     $exam->load('subject', 'questions.choice_text');
-//     return new ExamResource($exam);
-// }
-
-public function show($id)
-{
-    try {
-        $exam = Exam::with('exam', 'questions.choices')->findOrFail($id);
-        return new ExamResource($exam);
-    } catch (ModelNotFoundException $e) {
-        return response()->json(['message' => 'Exam not found'], 404);
-    }
-}
-
-
-public function showQuestion(Subject $subject, Question $question)
-{
-    // Check if the question belongs to the exam
-    if ($question->subject_id !== $subject->id) {
-        return response()->json(['message' => 'Question does not belong to this exam'], 404);
+    // Show exam with subject and questions + choices
+    public function show($id)
+    {
+        try {
+            $exam = Exam::with('subject', 'questions.choices')->findOrFail($id);
+            return new ExamResource($exam);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'Exam not found'], 404);
+        }
     }
 
-    // Optionally load relations like choices
-    $question->load('choices'); // or whatever relation you have
+    // Show specific question of exam with choices
+    public function showQuestion(Exam $exam, Question $question)
+    {
+        $belongs = $exam->questions()->where('questions.id', $question->id)->exists();
 
-    return response()->json(['data' => $question]);
-}
+        if (!$belongs) {
+            return response()->json(['message' => 'Question does not belong to this exam'], 404);
+        }
 
-public function update(UpdateExamRequest $request, Exam $exam)
+        $question->load('choices');
+
+        return response()->json(['data' => $question]);
+    }
+
+    // Show all questions of an exam with choices
+    public function showQuestions(Exam $exam)
+    {
+        $questions = $exam->questions()->with('choices')->get();
+
+        return response()->json([
+            'status' => 200,
+            'data' => $questions,
+        ]);
+    }
+
+    // Update exam data
+    public function update(UpdateExamRequest $request, Exam $exam)
     {
         try {
             $exam->update($request->validated());
@@ -94,6 +102,33 @@ public function update(UpdateExamRequest $request, Exam $exam)
         }
     }
 
+    // Add questions to exam (many-to-many sync without detaching)
+    public function addQuestions(Request $request, Exam $exam)
+    {
+        $request->validate([
+            'question_ids' => 'required|array',
+            'question_ids.*' => 'exists:questions,id',
+        ]);
+
+        $exam->questions()->syncWithoutDetaching($request->question_ids);
+
+        return response()->json([
+            'message' => 'Questions added to exam successfully.',
+            'questions' => $exam->questions()->get(),
+        ]);
+    }
+
+    // Remove a question from exam (optional - if implemented)
+    public function removeQuestionFromExam(Exam $exam, Question $question)
+    {
+        $exam->questions()->detach($question->id);
+
+        return response()->json([
+            'message' => 'Question removed from exam successfully.',
+        ]);
+    }
+
+    // Delete exam
     public function destroy(Exam $exam)
     {
         try {

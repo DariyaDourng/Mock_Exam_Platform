@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChoiceController;
+use App\Http\Controllers\ExamAttemptController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\UserController;
@@ -92,7 +93,6 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('/roles/{id}/delete', 'destroy');
         Route::get('/roles/search', 'search');
     });
-
 });
 
 // Subject Routes
@@ -112,8 +112,7 @@ Route::delete('exams/{exam}', [ExamController::class, 'destroy']);
 // Question Routes
 Route::apiResource('questions', QuestionController::class);
 
-// If you want to delete a question from an exam, define a controller method in ExamController:
-// Example: removeQuestionFromExam
+// Delete a question from an exam
 Route::delete('/exams/{exam}/questions/{question}', [ExamController::class, 'removeQuestionFromExam']);
 
 // Choice Routes
@@ -126,5 +125,39 @@ Route::post('/questions/{question}/choices', [ChoiceController::class, 'storeOrU
 // Category Routes
 Route::apiResource('categories', CategoryController::class);
 
+// Exam Questions Management
+Route::post('/exams/{exam}/questions', [ExamController::class, 'addQuestions']);
+Route::get('/exams/{exam}/questions/{question}', [ExamController::class, 'showQuestion']);
+Route::get('/exams/{exam}/questions', [ExamController::class, 'showQuestions']);
+
+// Redundant exam show route (already declared above, you can remove one if duplicated)
+Route::get('/exams/{exam}', [ExamController::class, 'show']);
+
 // School Routes
 Route::apiResource('schools', SchoolController::class);
+
+// Route::apiResource('exam-attempts', ExamAttemptController::class);
+
+// // Add a POST route to save answers separately (optional)
+// Route::post('exam-attempts/{examAttempt}/answers', [ExamAttemptController::class, 'saveAnswers']);
+
+Route::middleware('auth:api')->group(function () {
+    
+});
+Route::apiResource('exam-attempts', ExamAttemptController::class);
+Route::post('/exam-attempts', [ExamAttemptController::class, 'store']);
+Route::post('exam-attempts/{examAttempt}/answers', [ExamAttemptController::class, 'saveAnswers']);
+Route::post('/exam-attempts/{examAttempt}/grade', [ExamAttemptController::class, 'gradeExamAttempt']);
+
+Route::get('/exam-attempts/{id}', [ExamAttemptController::class, 'show']);
+
+
+
+Route::middleware('auth:api')->get('/user', function (Request $request) {
+    return response()->json([
+        'id' => $request->user()->id,
+        'name' => $request->user()->name,
+        'email' => $request->user()->email,
+        // add other user fields you need here
+    ]);
+});
