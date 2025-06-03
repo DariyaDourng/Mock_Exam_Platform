@@ -2,43 +2,36 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';  // This for getting the current path
-import { useRouter } from 'next/navigation'; // To use router for dynamic paths
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import {
   HomeIcon,
-  BookOpenIcon,
   ClipboardDocumentCheckIcon,
-  UsersIcon,
-  ChartBarIcon,
-  Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
+  QuestionMarkCircleIcon,
   Bars3Icon,
   XMarkIcon,
-  QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline';
-
-const menuItems = [
-  { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
-  { name: 'Available Exam', icon: ClipboardDocumentCheckIcon , path: '/dashboard/tests' },
-  { name: 'Your Result', icon: ClipboardDocumentCheckIcon, path: '/dashboard/scores' },
-  { name: 'Leaderboard', icon: QuestionMarkCircleIcon, path: '/dashboard/leaderboard' },
-
-];
 
 export default function AdminSidebarPage() {
   const pathname = usePathname();
-  const router = useRouter(); // Access the router
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
+  const menuItems = [
+    { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
+    { name: 'Available Exam', icon: ClipboardDocumentCheckIcon, path: '/dashboard/tests' },
+    { name: 'Your Result', icon: ClipboardDocumentCheckIcon, path: '/dashboard/scores' },
+    { name: 'Leaderboard', icon: QuestionMarkCircleIcon, path: '/dashboard/leaderboard' },
+  ];
+
   return (
     <>
-      {/* Mobile Toggle */}
+      {/* Mobile Toggle Button */}
       <button
         onClick={toggleSidebar}
         className="md:hidden p-4 focus:outline-none"
+        aria-label="Toggle sidebar"
       >
         {sidebarOpen ? (
           <XMarkIcon className="h-6 w-6" />
@@ -49,33 +42,38 @@ export default function AdminSidebarPage() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-white shadow-md transform transition-transform duration-300 ease-in-out
+        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-white border transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:block`}
       >
         <div className="flex flex-col h-full px-4 py-6 overflow-y-auto">
           {/* Logo and Title */}
-          <div className="flex items-center gap-3 mb-8 px-3">
+          <div className="flex items-center gap-2 mb-6 justify-center">
             <Image
-              src="/images/Applogo.png" // Update this path as necessary
+              src="/images/Applogo.png"
               alt="Online Exam Platform Logo"
               width={40}
               height={40}
+              priority
             />
-            <h1 className="text-xl font-semibold">Online Exam</h1>
+            <h1 className="text-xl text-indigo-600 font-semibold">Mock-Exam</h1>
           </div>
 
           {/* Menu Items */}
           <ul className="space-y-2">
             {menuItems.map((item) => {
-              const isActive = pathname === item.path;
+              const isActive =
+                item.path === '/dashboard'
+                  ? pathname === item.path
+                  : pathname.startsWith(item.path);
+
               const Icon = item.icon;
 
               return (
                 <li key={item.name}>
                   <Link
                     href={item.path}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition 
-                      ${isActive ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition
+                      ${isActive ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-100'}`}
                   >
                     <Icon className="h-5 w-5" />
                     <span>{item.name}</span>

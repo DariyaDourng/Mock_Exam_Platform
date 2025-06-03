@@ -1,25 +1,31 @@
+'use client';
 
-import React from 'react'
-import StudentSidebar from '@/components/sidebar/student-sidebar';
+import React from 'react';
 import Header from '@/components/header/Header';
 import StudentTest from './StudentTest';
+import AdminSidebarPage from '@/components/sidebar/student-sidebar';
 
-
-
-
-
-
-
-function StudentScorePage() {
-  return (
-  <div className="flex flex-col h-screen">
-        <Header />  {/* takes full height */}
-        <div className="flex h-screen">
-              {/* stays at top */}
-          <main className="flex-1 overflow-y-auto p-6 py-28 bg-gray-100"><StudentTest params={{ id: `question` }} /></main>
-        </div>
-      </div>
-  )
+interface PageProps {
+  params: Promise<{ id: string }>;
 }
 
-export default StudentScorePage;
+export default function StudentScorePage({ params }: PageProps) {
+  const unwrappedParams = React.use(params);
+  const { id } = unwrappedParams;
+
+  const handleToggleSidebar = () => {
+    console.log('Sidebar toggled');
+  };
+
+  return (
+    <div className="flex flex-col h-screen">
+      <Header onToggleSidebar={handleToggleSidebar} />
+      <div className="flex h-screen">
+        <AdminSidebarPage />
+        <main className="flex-1 overflow-y-auto p-2 py-12 bg-gray-100">
+          <StudentTest params={{ id }} />
+        </main>
+      </div>
+    </div>
+  );
+}

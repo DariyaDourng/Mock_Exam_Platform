@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <AdminSidebarPage />
 
         {/* Main content scrolls inside here */}
-        <main className="flex-1 overflow-y-auto p-6 py-28 bg-gray-100">
+        <main className="flex-1 overflow-y-auto p-6 py-18 bg-gray-100">
         <QuestionDetail />
         </main>
       </div>

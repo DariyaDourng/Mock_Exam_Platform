@@ -1,16 +1,11 @@
 'use client'
 
 import { useState, useEffect } from "react"
+import axios from "axios"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -19,15 +14,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { MoreHorizontal, Plus, Search } from "lucide-react"
+import { MoreHorizontal, Plus, Search, Edit, Eye, Trash2, List } from "lucide-react"
 import { ExamModal } from "@/components/modals/exam-modal"
 import { DeleteExamModal } from "@/components/modals/delete-exam-modal"
 import toast from 'react-hot-toast'
 import Link from "next/link"
-
+import { useRouter } from "next/navigation"
 
 export default function AdminExamsPage() {
-  
+  const router = useRouter()
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedExam, setSelectedExam] = useState<any>(null)
@@ -36,25 +32,25 @@ export default function AdminExamsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
 
+  // Fetch exams from API
   const fetchExams = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/exams")
-      if (!response.ok) throw new Error("Failed to fetch exams")
-      const data = await response.json()
-      setExams(data.data || [])
+      const response = await axios.get("http://localhost:8000/api/exams")
+      setExams(response.data.data || [])
     } catch (error) {
       console.error("Error fetching exams:", error)
+      toast.error("Failed to fetch exams.")
     }
   }
 
+  // Fetch courses (subjects) from API
   const fetchCourses = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/subjects")
-      if (!response.ok) throw new Error("Failed to fetch courses")
-      const data = await response.json()
-      setCourses(data.data || [])
+      const response = await axios.get("http://localhost:8000/api/subjects")
+      setCourses(response.data.data || [])
     } catch (error) {
       console.error("Error fetching courses:", error)
+      toast.error("Failed to fetch courses.")
     }
   }
 
@@ -75,85 +71,49 @@ export default function AdminExamsPage() {
 
   const handleAddExam = async (examData: any) => {
     try {
-      const response = await fetch("http://localhost:8000/api/exams", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          name: examData.name,
-          subject_id: examData.course,
-          description: examData.description,
-          duration: examData.duration,
-          created_at: examData.creatAt,
-          total_questions: examData.questions,
-          passing_score: examData.passingScore,
-          is_active: examData.isActive ? "1" : "0",
-        }),
+      await axios.post("http://localhost:8000/api/exams", {
+        name: examData.name,
+        subject_id: examData.course,
+        description: examData.description,
+        duration: examData.duration,
+        created_at: examData.createdAt,
+        total_questions: examData.questions,
+        passing_score: examData.passingScore,
+        is_active: examData.isActive ? "1" : "0",
       })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error("Raw error:", errorText)
-        throw new Error("Failed to create exam")
-      }
-
       toast.success("Exam successfully created.")
       setIsAddModalOpen(false)
       fetchExams()
     } catch (error) {
       console.error("Error adding exam:", error)
-      toast.error('Failed to create exam')
-       
+      toast.error("Failed to create exam.")
     }
   }
 
   const handleEditExam = async (examData: any) => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/exams/${examData.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            name: examData.name,
-            subject_id: examData.course,
-            description: examData.description,
-            duration: examData.duration,
-            total_questions: examData.questions,
-
-            passing_score: examData.passingScore,
-            is_active: examData.isActive ? "1" : "0",
-          }),
-        }
-      )
-
-      if (!response.ok) throw new Error("Failed to update exam")
-
+      await axios.put(`http://localhost:8000/api/exams/${examData.id}`, {
+        name: examData.name,
+        subject_id: examData.course,
+        description: examData.description,
+        duration: examData.duration,
+        total_questions: examData.questions,
+        passing_score: examData.passingScore,
+        is_active: examData.isActive ? "1" : "0",
+      })
       toast.success("Exam successfully updated.")
       setIsEditModalOpen(false)
       fetchExams()
     } catch (error) {
       console.error("Error updating exam:", error)
-      toast.error("Failed to update exam")
+      toast.error("Failed to update exam.")
     }
   }
 
   const handleDeleteExam = async () => {
     if (!selectedExamId) return
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/exams/${selectedExamId}`,
-        {
-          method: "DELETE",
-        }
-      )
-      if (!response.ok) throw new Error("Failed to delete exam")
-
+      await axios.delete(`http://localhost:8000/api/exams/${selectedExamId}`)
       toast.success("Exam successfully deleted.")
       setIsDeleteModalOpen(false)
       setSelectedExamId(null)
@@ -224,7 +184,7 @@ export default function AdminExamsPage() {
                 <TableHead>Duration</TableHead>
                 <TableHead>Created At</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
+                <TableHead className="w-[155px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -235,38 +195,47 @@ export default function AdminExamsPage() {
                   <TableCell>{exam.subject_name || '-'}</TableCell>
                   <TableCell>{exam.total_questions}</TableCell>
                   <TableCell>{exam.duration} min</TableCell>
-                  <TableCell>{new Date (exam.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(exam.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(exam.is_active ? "active" : "draft")}</TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-2">
+                          <Link href={`/admin/exams/${exam.id}/questions`}>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
-                          aria-label="Actions"
+                          aria-label="Manage Questions"
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <Eye className="h-4 w-4 text-indigo-600" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditModal(exam)}>
-                          Edit
-                        </DropdownMenuItem>
-                         <DropdownMenuItem asChild>
-                            <Link href={`/admin/exams/${exam.id}/questions`}>Manage Questions</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/exams/${exam.id}/results`}>View Results</Link>
-                          </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => openDeleteModal(exam.id)}
-                          className="text-destructive"
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Edit Exam"
+                        onClick={() => openEditModal(exam)}
+                      >
+                        <Edit className="h-4 w-4 text-indigo-500" />
+                      </Button>
+                  
+                      {/* <Link href={`/admin/exams/${exam.id}/results`} passHref legacyBehavior>
+                        <Button
+                          as="a"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="View Results"
                         >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <Eye className="h-4 w-4 text-green-600" />
+                        </Button>
+                      </Link> */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Delete Exam"
+                        onClick={() => openDeleteModal(exam.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

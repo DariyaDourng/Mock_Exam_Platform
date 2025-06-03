@@ -6,12 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Table,
   TableBody,
   TableCell,
@@ -22,7 +16,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   HelpCircle,
-  MoreHorizontal,
   Plus,
   Search,
   Edit,
@@ -40,17 +33,19 @@ import { QuestionModal } from "@/components/modals/question-modal";
 import { DeleteQuestionModal } from "@/components/modals/delete-question-modal";
 import { UpdateQuestionModal } from "@/components/modals/UpdateQuestionModal";
 import { toast } from "react-hot-toast";
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
 
 export default function QuestionBankPage() {
   const router = useRouter();
-    const handlePreviewClick = (question: any) => {
-  if (!question || !question.id) {
-    // maybe show an alert or just ignore click if no id yet
-    return
-  }
-  router.push(`/admin/question-bank/${question.id}`)
-}
+
+  const handleAddToExam = (question: any) => {
+    if (!question || !question.id) return;
+    router.push(`/admin/exams/question/${question.id}`);
+  };
+  const handlePreviewClick = (question: any) => {
+    if (!question || !question.id) return;
+    router.push(`/admin/question-bank/${question.id}`);
+  };
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,7 +58,10 @@ export default function QuestionBankPage() {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  // Fetch questions from API
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Customize items per page
+
   const fetchQuestions = async () => {
     setIsLoading(true);
     try {
@@ -86,9 +84,9 @@ export default function QuestionBankPage() {
 
         return {
           id: q.id,
-          text: q.question_text, // may be null for image questions
-          questionImage: q.question_image, // image url or object
-          format: q.format || "text", // "text" or "image"
+          text: q.question_text,
+          questionImage: q.question_image,
+          format: q.format || "text",
           subject: q.subject_name || "Uncategorized",
           type: q.type,
           options,
@@ -111,38 +109,37 @@ export default function QuestionBankPage() {
     fetchQuestions();
   }, []);
 
-  
-
   // Filter questions by search and subject
   const filteredQuestions = questions.filter((question) => {
-    // Use question.text if exists, else empty string
     const searchableText = typeof question.text === "string" ? question.text : "";
-
-    // Check if matches search query (case insensitive)
     const matchesSearch = searchableText.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // Check if matches subject filter
     const matchesSubject = subjectFilter === "all" || question.subject === subjectFilter;
-
     return matchesSearch && matchesSubject;
   });
 
+  // Pagination calculation
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
+
+  // Reset page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, subjectFilter]);
+
   const subjects = ["all", ...Array.from(new Set(questions.map((q) => q.subject)))];
 
-  // Open edit modal and set selected question ID
   const openEditModal = (questionId: string | number) => {
-    console.log("Edit button clicked for ID:", questionId);
     setSelectedQuestionId(questionId);
     setIsEditModalOpen(true);
   };
 
-  // Close edit modal and clear selected question ID
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setSelectedQuestionId(null);
   };
 
-  // Delete modal open/close handlers
   const openDeleteModal = (id: string | number) => {
     setSelectedQuestionId(id);
     setDeleteModalOpen(true);
@@ -153,13 +150,11 @@ export default function QuestionBankPage() {
     setSelectedQuestionId(null);
   };
 
-  // Handle successful deletion: refetch and notify
   const handleDeleted = async () => {
     await fetchQuestions();
     toast.success("Question deleted successfully");
   };
 
-  // Handle successful add or edit: refetch and notify
   const handleSaveSuccess = () => {
     fetchQuestions();
   };
@@ -169,7 +164,9 @@ export default function QuestionBankPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Question Bank</h1>
-          <p className="text-muted-foreground">Manage and reuse questions across multiple subjects</p>
+          <p className="text-muted-foreground">
+            Manage and reuse questions across multiple subjects
+          </p>
         </div>
         <Button
           onClick={() => setIsAddModalOpen(true)}
@@ -212,112 +209,140 @@ export default function QuestionBankPage() {
           {isLoading ? (
             <p className="text-center py-10">Loading questions...</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">ID</TableHead>
-                  <TableHead className="w-[40%]">Question</TableHead>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="w-[80px]">Points</TableHead>
-                  <TableHead>Correct Answer</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredQuestions.length === 0 ? (
+            <>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {searchQuery || subjectFilter !== "all"
-                        ? "No questions match your search criteria."
-                        : "No questions found. Add your first question."}
-                    </TableCell>
+                    <TableHead className="w-[50px]">ID</TableHead>
+                    <TableHead className="w-[40%]">Question</TableHead>
+                    <TableHead>Course</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="w-[80px]">Points</TableHead>
+                    <TableHead>Correct Answer</TableHead>
+                    <TableHead className="w-[150px]">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredQuestions.map((question, index) => (
-                    <TableRow key={question.id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <HelpCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          {question.format === "text" && question.text ? (
-                            <span className="line-clamp-2">{question.text}</span>
-                          ) : question.format === "image" && question.questionImage ? (
-                            <img
-                              src={
-                                typeof question.questionImage === "string"
-                                  ? question.questionImage
-                                  : question.questionImage.url
-                              }
-                              alt={`Question ${question.id} image`}
-                              className="max-h-16 rounded"
-                            />
-                          ) : (
-                            <span className="italic text-sm text-muted-foreground">
-                              [No Question Text]
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{question.subject}</Badge>
-                      </TableCell>
-                      <TableCell className="capitalize">{question.type.replace("-", " ")}</TableCell>
-                      <TableCell>{question.points}</TableCell>
-                      <TableCell>
-{(() => {
-  const correctOptions = question.options.filter(opt => opt.isCorrect);
-
-  if (correctOptions.length === 0) return "None";
-
-  // Join all correct option texts with commas
-  return correctOptions.map(opt => opt.text).join(", ");
-})()}
-
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEditModal(question.id)}>
-                            <Edit className="h-4 w-4 text-indigo-500" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openDeleteModal(question.id)}>
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">More</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openEditModal(question.id)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => openDeleteModal(question.id)}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handlePreviewClick(question)}  className="cursor-pointer">
-                                <Eye className="mr-2 h-4 w-4" />
-                                Preview
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add to Exam
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {paginatedQuestions.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        {searchQuery || subjectFilter !== "all"
+                          ? "No questions match your search criteria."
+                          : "No questions found. Add your first question."}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    paginatedQuestions.map((question, index) => (
+                      <TableRow key={question.id}>
+                        <TableCell>{startIndex + index + 1}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <HelpCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            {question.format === "text" && question.text ? (
+                              <span className="line-clamp-2">{question.text}</span>
+                            ) : question.format === "image" && question.questionImage ? (
+                              <img
+                                src={
+                                  typeof question.questionImage === "string"
+                                    ? question.questionImage
+                                    : question.questionImage.url
+                                }
+                                alt={`Question ${question.id} image`}
+                                className="max-h-16 rounded"
+                              />
+                            ) : (
+                              <span className="italic text-sm text-muted-foreground">
+                                [No Question Text]
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{question.subject}</Badge>
+                        </TableCell>
+                        <TableCell className="capitalize">
+                          {question.type.replace("-", " ")}
+                        </TableCell>
+                        <TableCell>{question.points}</TableCell>
+                        <TableCell>
+                          {(() => {
+                            const correctOptions = question.options.filter(
+                              (opt) => opt.isCorrect
+                            );
+
+                            if (correctOptions.length === 0) return "None";
+
+                            return correctOptions.map((opt) => opt.text).join(", ");
+                          })()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handlePreviewClick(question)}
+                              aria-label="Preview"
+                            >
+                              <Eye className="h-4 w-4 text-indigo-600" />
+                            </Button>
+                            {/* Uncomment if Add to Exam needed
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleAddToExam(question)}
+                              aria-label="Add to Exam"
+                            >
+                              <Plus className="h-4 w-4 text-green-600" />
+                            </Button>
+                            */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditModal(question.id)}
+                              aria-label="Edit"
+                            >
+                              <Edit className="h-4 w-4 text-indigo-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openDeleteModal(question.id)}
+                              aria-label="Delete"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Pagination Controls */}
+              <div className="flex justify-center items-center gap-4 mt-4">
+                <Button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <Button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

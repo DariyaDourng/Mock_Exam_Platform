@@ -1,27 +1,11 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import axios from "axios"
-import {
-  ChevronLeft,
-  CheckCircle,
-  Info,
-  BookOpen,
-  ClipboardList,
-  Star,
-  Calendar,
-  MessageCircle,
-} from "lucide-react"
+import { ChevronLeft, CheckCircle, Info, ClipboardList, Star, Calendar, MessageCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 
 interface Choice {
   id: number
@@ -58,7 +42,7 @@ export default function AdminQuestionPreviewPage() {
       setError(null)
       try {
         const response = await axios.get<{ data: Question & { choices: any[] } }>(
-          `http://localhost:8000/api/questions/${params.id}`
+          `http://localhost:8000/api/questions/${params.id}`,
         )
         const q = response.data.data
 
@@ -92,177 +76,149 @@ export default function AdminQuestionPreviewPage() {
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <div className="text-center">
           <svg
-            className="mx-auto h-8 w-8 animate-spin text-primary"
+            className="mx-auto h-6 w-6 animate-spin text-indigo-600"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"
-            />
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
           </svg>
-          <p className="mt-2 text-lg font-normal text-primary">Loading question...</p>
+          <p className="mt-2 text-sm text-indigo-600">loading question...</p>
         </div>
       </div>
     )
   }
 
   if (error) {
-    return (
-      <div className="p-8 text-red-600 text-center font-medium">{error}</div>
-    )
+    return <div className="p-8 text-red-500 text-center">{error}</div>
   }
 
   if (!question) {
-    return (
-      <div className="p-8 text-center text-muted-foreground">No question found.</div>
-    )
+    return <div className="p-8 text-center text-gray-500">No question found.</div>
   }
 
   return (
-    <div className="container max-w-6xl mx-auto px-6">
-      <Button
-        variant="ghost"
-        className="mb-6 flex items-center space-x-2 group hover:text-primary transition"
-        onClick={handleBack}
-      >
-        <ChevronLeft className="h-6 w-6 group-hover:-translate-x-1 transition-transform" />
-        <span className="font-normal text-lg">Back to Questions</span>
-      </Button>
+    <div className="space-y-4">
+      <div>
+        
+          <Button
+            variant="ghost"
+            className="flex items-center text-black hover:text-gray-800"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Question Bank</span>
+          </Button>
 
-      <Card className="mx-6">
-        <CardHeader>
-          <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide mb-2 flex items-center gap-2">
-            <Info className="h-4 w-4 text-muted-foreground" />
-            Question Number
-          </p>
-          <CardTitle className="text-3xl font-semibold tracking-tight mb-2">
-            #{question.id}
-          </CardTitle>
-          <CardDescription className="text-muted-foreground mb-6 text-base font-normal">
-            Admin preview only — this page is not shown to students.
-          </CardDescription>
-        </CardHeader>
-
-        {/* Info Panel */}
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6 border-b border-gray-300 pb-8">
-          <div className="flex items-center space-x-3">
-            <BookOpen className="h-6 w-6 text-indigo-600" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Subject
-              </p>
-              <p className="text-lg font-normal">{question.subject_name ?? "N/A"}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <ClipboardList className="h-6 w-6 text-indigo-600" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Question Type
-              </p>
-              <p className="capitalize text-lg font-normal">
-                {question.type?.replace("-", " ") ?? "N/A"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Star className="h-6 w-6 text-indigo-600" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Points
-              </p>
-              <p className="text-lg font-normal">{question.points ?? "N/A"}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Calendar className="h-6 w-6 text-indigo-600" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Created At
-              </p>
-              <p className="text-lg font-normal">
-                {question.created_at
-                  ? new Date(question.created_at).toLocaleDateString()
-                  : "N/A"}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-
-        <CardContent className="mt-8 space-y-8">
-          <article className="prose max-w-none text-lg font-normal leading-relaxed">
-            {question.format === "text" && question.question_text}
-            {question.format === "image" && question.question_image && (
-              <img
-                src={question.question_image}
-                alt="Question"
-                className="rounded-lg border border-gray-200 max-w-full h-auto"
-              />
-            )}
-          </article>
-
-          <Separator className="border-2 border-gray-300" />
-
-          <section>
-            <h2 className="mb-6 text-2xl font-semibold flex items-center gap-3 text-indigo-600">
-              <Info className="h-6 w-6" />
-              Choices
-            </h2>
-            <ul className="space-y-4">
-              {question.choices?.map((choice) => (
-                <li
-                  key={choice.id}
-                  className="flex items-center gap-4 rounded-lg border border-gray-200 p-5 shadow-sm cursor-default select-none"
-                >
-                  <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
-                      choice.isCorrect
-                        ? "border-indigo-600 bg-green-50 text-indigo-600"
-                        : "border-gray-300 text-gray-400"
-                    }`}
-                    aria-label={choice.isCorrect ? "Correct answer" : undefined}
-                  >
-                    {choice.isCorrect && <CheckCircle className="h-5 w-5" />}
-                  </span>
-                  <span className="text-lg font-normal">{choice.text}</span>
-                </li>
-              ))}
-              {!question.choices?.length && (
-                <p className="text-gray-500 italic">No choices available</p>
+        {/* Question Header */}
+        <div className="bg-white rounded-t-lg shadow-sm border border-gray-200 p-3 ">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Badge variant="outline" className="mr-3 bg-blue-50 text-indigo-700 border-blue-200 px-3 py-1">
+                Question #{question.id}
+              </Badge>
+              {question.subject_name && (
+                <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 px-3 py-1">
+                  {question.subject_name}
+                </Badge>
               )}
-            </ul>
-          </section>
+            </div>
+            <div className="flex items-center">
+              {question.points && (
+                <div className="flex items-center text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                  <Star className="h-4 w-4 mr-1" />
+                  <span className="text-sm">{question.points} pts</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-          {question.explanation && (
-            <>
-              <Separator className="border-2 border-gray-300" />
-              <section>
-                <h2 className="mb-4 text-2xl font-semibold flex items-center gap-3 text-indigo-600">
-                  <MessageCircle className="h-6 w-6" />
-                  Explanation
-                </h2>
-                <p className="prose max-w-none text-lg leading-relaxed font-normal">
-                  {question.explanation}
-                </p>
-              </section>
-            </>
-          )}
-        </CardContent>
-      </Card>
+          <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
+            {question.type && (
+              <div className="flex items-center">
+                <ClipboardList className="h-4 w-4 mr-1" />
+                <span className="capitalize">{question.type.replace("-", " ")}</span>
+              </div>
+            )}
+            {question.created_at && (
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                <span>{new Date(question.created_at).toLocaleDateString()}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-blue-50 border-l-4 border-indigo-400 p-3 text-sm text-indigo-700 mb-6">
+            <div className="flex items-center">
+              <Info className="h-4 w-4 mr-2" />
+              <span>Admin preview only — this page is not shown to students.</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Question Content */}
+        <div className="bg-white shadow-sm border-x border-gray-200 p-6">
+          <div className="mb-4">
+            <h2 className="text-sm font-medium text-gray-900 mb-4">Question</h2>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              {question.format === "text" && <div className="text-gray-800 text-sm">{question.question_text}</div>}
+              {question.format === "image" && question.question_image && (
+                <div className="flex justify-center">
+                  <img
+                    src={question.question_image || "/placeholder.svg"}
+                    alt="Question"
+                    className="rounded-lg border border-gray-200 max-w-full h-auto"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-medium text-gray-900 mb-2">Answer Choices</h2>
+            <div className="space-y-3">
+              {question.choices?.map((choice, index) => (
+                <div
+                  key={choice.id}
+                  className={`flex items-center gap-3 p-2 rounded-lg border ${
+                    choice.isCorrect ? "bg-green-50 border-green-200" : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div
+                    className={`flex h-6 w-6 items-center justify-center rounded-full text-sm ${
+                      choice.isCorrect
+                        ? "bg-green-100 text-green-700 border border-green-300"
+                        : "bg-gray-100 text-gray-700 border border-gray-300"
+                    }`}
+                  >
+                    {String.fromCharCode(65 + index)}
+                  </div>
+                  <div className="flex-1">{choice.text}</div>
+                  {choice.isCorrect && (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle className="h-5 w-5 mr-1" />
+                      <span className="text-sm font-medium">Correct</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {!question.choices?.length && <p className="text-gray-500 italic">No choices available</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* Explanation */}
+        {question.explanation && (
+          <div className="bg-white rounded-b-lg shadow-sm border border-gray-200 border-t-0 p-6">
+            <h2 className="text-sm font-medium text-gray-900 mb-4 flex items-center">
+              <MessageCircle className="h-5 w-5 mr-2 text-blue-600" />
+              Explanation
+            </h2>
+            <div className="bg-blue-50 rounded-lg p-5 text-gray-800">{question.explanation}</div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
