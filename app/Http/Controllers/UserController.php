@@ -316,6 +316,33 @@ class UserController extends Controller
         }
     }
 
-    
+ public function getTotalStudents()
+{
+    $totalStudents = User::whereHas('role', function ($query) {
+        $query->where('name', 'student');  // Assuming 'name' column in 'roles' table holds 'student'
+    })->count();
+
+    return response()->json([
+        'status' => 200,
+        'message' => 'Total students fetched successfully',
+        'data' => $totalStudents,
+    ]);
+}
+
+ public function getStudents()
+    {
+        // Assuming 'role' is a column in the 'users' table
+       $studentinfo = User::whereHas('role', function ($query) {
+        $query->where('name', 'student');  // Assuming 'name' column in 'roles' table holds 'student'
+    })->select('name', 'email')
+        ->get();
+
+    return response()->json([
+        'status' => 200,
+        'message' => 'Total students fetched successfully',
+        'data' => $studentinfo,
+    ]);
+    }
+
 
 }

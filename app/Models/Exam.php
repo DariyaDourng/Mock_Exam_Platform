@@ -23,7 +23,7 @@ class Exam extends Model
     ];
 
     public function subject(){
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(Subject::class, 'subject_id');
     }
 
     public function questions(){
@@ -31,7 +31,7 @@ class Exam extends Model
     }
 
     public function attempts(){
-        return $this->hasMany(Exam::class);
+        return $this->hasMany(ExamAttempt::class);
     }
 
 

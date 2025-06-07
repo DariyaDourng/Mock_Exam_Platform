@@ -8,6 +8,7 @@ use App\Http\Resources\ExamAttemptResource;
 use App\Models\Choice;
 use App\Models\ExamAttempt;
 use App\Models\ExamAnswer;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -260,4 +261,50 @@ class ExamAttemptController extends Controller
             ], 500);
         }
     }
+
+ public function getEnrollmentData(Request $request)
+    {
+        try {
+            // Optionally handle time range filter
+            $timeRange = $request->input('time_range', 'month');
+            $currentDate = now();
+
+            // Get enrollments (excluding NULL started_at)
+            $enrollments = ExamAttempt::whereNotNull('started_at')
+                                      ->groupBy('exam_id')  // Group by exam_id to get enrollments per subject
+                                      ->selectRaw('exam_id, COUNT(DISTINCT user_id) as count')
+                                      ->get();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Enrollment data fetched successfully',
+                'data' => $enrollments,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Error fetching enrollment data',
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+     public function getAverageScores()
+    {
+        try {
+            $averageScore = ExamAttempt::avg('score');  // Calculate the average score from all exam attempts
+            return response()->json([
+                'status' => 200,
+                'message' => 'Average score fetched successfully',
+                'data' => $averageScore,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Error fetching average score',
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
 }

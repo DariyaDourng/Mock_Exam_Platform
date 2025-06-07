@@ -8,11 +8,13 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChoiceController;
 use App\Http\Controllers\ExamAttemptController;
 use App\Http\Controllers\ExamController;
+use App\Http\Controllers\LeaderBoardController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\UserExamController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
@@ -96,11 +98,11 @@ Route::middleware(['auth:api'])->group(function () {
 });
 
 // Subject Routes
-Route::post('subjects', [SubjectController::class, 'store']);
-Route::get('subjects/{subject}', [SubjectController::class, 'show']);
-Route::get('subjects', [SubjectController::class, 'index']);
-Route::put('subjects/{subject}', [SubjectController::class, 'update']);
-Route::delete('subjects/{subject}', [SubjectController::class, 'destroy']);
+Route::post('/subjects', [SubjectController::class, 'store']);
+Route::get('/subjects/{subject}', [SubjectController::class, 'show']);
+Route::get('/subjects', [SubjectController::class, 'index']);
+Route::put('/subjects/{subject}', [SubjectController::class, 'update']);
+Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy']);
 
 // Exam Routes
 Route::post('exams', [ExamController::class, 'store']);
@@ -161,3 +163,16 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
         // add other user fields you need here
     ]);
 });
+
+Route::get('/leaderboard/{subjectId}', [LeaderBoardController::class, 'leaderboard']);
+
+
+
+Route::get('/user-exams', [UserExamController::class, 'userExams']);
+
+Route::get('/enrollments', [ExamAttemptController::class, 'getEnrollmentData']);
+Route::get('/students', [UserController::class, 'getTotalStudents']);
+Route::get('/average-scores', [ExamAttemptController::class, 'getAverageScores']);
+Route::get('/totalsubjects', [SubjectController::class, 'getTotalSubjects']);
+Route::get('/countExams', [ExamController::class, 'getTotalExams']);
+Route::get('/student', [UserController::class, 'getStudents']);

@@ -152,4 +152,14 @@ class SubjectController extends Controller
             ], 500);
         }
     }
+
+    public function getTotalSubjects()
+{
+    $totalSubjects = Subject::count();  // Or any other logic to count courses
+    return response()->json([
+        'status' => 200,
+        'message' => 'Total subjects fetched successfully',
+        'data' => $totalSubjects,
+    ]);
+}
 }

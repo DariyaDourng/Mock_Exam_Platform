@@ -146,4 +146,26 @@ class ExamController extends Controller
             ], 500);
         }
     }
+
+    // In your ExamController.php
+public function getAverageScores()
+{
+    $averageScores = Exam::avg('score');  // Calculate average score across exams
+    return response()->json([
+        'status' => 200,
+        'message' => 'Average score fetched successfully',
+        'data' => $averageScores,
+    ]);
+    
+}
+
+   public function getTotalExams()
+{
+    $totalExams = Exam::count();  // Or any other logic to count courses
+    return response()->json([
+        'status' => 200,
+        'message' => 'Total exams fetched successfully',
+        'data' => $totalExams,
+    ]);
+}
 }

@@ -78,4 +78,10 @@ public function school(){
     $this->belongsTo(School::class);
 }
 
+public function examAttempts()
+{
+    return $this->hasMany(ExamAttempt::class);
+}
+
+
 }
