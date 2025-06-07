@@ -1,6 +1,8 @@
-"use client"
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -8,61 +10,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, Search, Calendar, BookOpen } from "lucide-react"
+import axios from "axios"
 
 export default function AdminStudentsPage() {
-  // Mock data
-  const students = [
-    {
-      id: 1,
-      name: "Alex Johnson",
-      email: "alex.johnson@example.com",
-      courses: 3,
-      exams: 15,
-      avgScore: 88,
-      lastActive: "2023-05-01",
-      status: "active",
-    },
-    {
-      id: 2,
-      name: "Maria Garcia",
-      email: "maria.garcia@example.com",
-      courses: 2,
-      exams: 12,
-      avgScore: 92,
-      lastActive: "2023-04-30",
-      status: "active",
-    },
-    {
-      id: 3,
-      name: "James Wilson",
-      email: "james.wilson@example.com",
-      courses: 3,
-      exams: 14,
-      avgScore: 85,
-      lastActive: "2023-04-29",
-      status: "active",
-    },
-    {
-      id: 4,
-      name: "Sarah Lee",
-      email: "sarah.lee@example.com",
-      courses: 2,
-      exams: 10,
-      avgScore: 78,
-      lastActive: "2023-04-25",
-      status: "inactive",
-    },
-    {
-      id: 5,
-      name: "David Chen",
-      email: "david.chen@example.com",
-      courses: 3,
-      exams: 13,
-      avgScore: 90,
-      lastActive: "2023-04-28",
-      status: "active",
-    },
-  ]
+  const [students, setStudents] = useState<any[]>([]) // Initialize as empty array
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null) // Error state to capture any fetch errors
+
+  // Fetch users (students) data from the backend
+  const fetchStudents = async () => {
+    setLoading(true)
+    setError(null) // Reset error state before making the request
+    try {
+      const response = await axios.get("http://localhost:8000/api/student")  // Adjust the API if necessary
+      console.log("API Response:", response.data) // Log the response to verify the structure
+
+      if (response.data && Array.isArray(response.data.data)) {
+        setStudents(response.data.data)  // Directly set the students list
+      } else {
+        setError("No student data found")
+      }
+    } catch (error: any) {
+      console.error("Error fetching students:", error)
+      setError("Failed to fetch student data")  // Set error message if fetch fails
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle fetching students when the component mounts
+  useEffect(() => {
+    fetchStudents()
+  }, [])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -80,6 +59,14 @@ export default function AdminStudentsPage() {
     if (score >= 80) return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
     if (score >= 70) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
     return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+  }
+
+  if (loading) {
+    return <div>Loading...</div> // Display loading state while data is being fetched
+  }
+
+  if (error) {
+    return <div>Error: {error}</div> // Display error message if fetch fails
   }
 
   return (
