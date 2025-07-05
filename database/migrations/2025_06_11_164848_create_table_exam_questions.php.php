@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('exam_question', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('exam_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('question_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
-            $table->unique(['exam_id', 'question_id']); // prevent duplicates
+            $table->foreignId('exam_id')->constrained()->cascadeOnDelete(); // Links to the exam
+            $table->foreignId('question_id')->constrained()->cascadeOnDelete(); // Links to the question
+            $table->integer('question_order')->nullable(); // Stores order of questions in the exam
+            $table->decimal('question_weight', 5, 2)->nullable(); // prevent duplicates
         });
     }
 

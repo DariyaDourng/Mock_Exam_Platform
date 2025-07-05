@@ -16,12 +16,15 @@ class StoreExamAttemptRequest extends FormRequest
         return [
             'exam_id' => ['required', 'exists:exams,id'],
             'user_id' => ['required', 'exists:users,id'],
-            'started_at' => ['nullable', 'date'],
-            'submitted_at' => ['nullable', 'date'],
+            'date_time_taken' => ['required', 'date_format:Y-m-d H:i:s'], // added
+            'date_time_finish' => ['nullable', 'date_format:Y-m-d H:i:s'], // added
+            'duration_minutes' => ['nullable', 'integer', 'min:0'], // added
+            'duration_seconds' => ['nullable', 'integer', 'min:0'], // added
             'score' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'total_scores' => ['nullable', 'numeric', 'min:0'], // added validation for total_scores
             'status' => ['required', 'in:in_progress,submitted,graded'],
 
-            // Add these for answers validation:
+            // Answers validation
             'answers' => ['required', 'array'],
             'answers.*.questionId' => ['required', 'exists:questions,id'],
             'answers.*.choiceId' => ['nullable', 'exists:choices,id'],

@@ -20,13 +20,14 @@ class ExamAttemptResource extends JsonResource
                 'name' => $this->user->name,
                 'email' => $this->user->email,
             ],
-            'started_at' => $this->started_at,
-            'submitted_at' => $this->submitted_at ?? null,
-            // 'score' => $this->score !== null ? round($this->score, 2) : null,
+            'date_time_taken' => $this->date_time_taken,  // added
+            'date_time_finish' => $this->date_time_finish ?? null, // added
+            'duration_minutes' => $this->duration_minutes,  // added
+            'duration_seconds' => $this->duration_seconds,  // added
             'score' => $this->score,
+            'total_scores' => $this->total_scores,  // added
             'status' => $this->status,
             'answers' => ExamAnswerResource::collection($this->whenLoaded('answers')),
-            'total_points'=> $this->total_points,
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

@@ -39,16 +39,29 @@ class ExamAttemptController extends Controller
             'answers.*.questionId' => 'required|exists:questions,id',
             'answers.*.answer' => 'nullable',
             'status' => 'required|string',
+            'date_time_taken' => 'required|date_format:Y-m-d H:i:s',
+            'date_time_finish' => 'nullable|date_format:Y-m-d H:i:s',
+            'duration_minutes' => 'nullable|integer|min:0',
+            'duration_seconds' => 'nullable|integer|min:0',
         ]);
 
         DB::beginTransaction();
 
         try {
+            // Ensure date format consistency
+            $date_time_taken = Carbon::createFromFormat('Y-m-d H:i:s', $validated['date_time_taken'])->format('Y-m-d H:i:s');
+            $date_time_finish = $validated['date_time_finish'] ? Carbon::createFromFormat('Y-m-d H:i:s', $validated['date_time_finish'])->format('Y-m-d H:i:s') : null;
+
             $examAttempt = ExamAttempt::create([
                 'exam_id' => $validated['exam_id'],
                 'user_id' => $validated['user_id'],
                 'status' => $validated['status'],
-                'score' => 0, // initial 0, will update after grading
+                'date_time_taken' => $date_time_taken,
+                'date_time_finish' => $date_time_finish,
+                'duration_minutes' => $validated['duration_minutes'] ?? 0,
+                'duration_seconds' => $validated['duration_seconds'] ?? 0,
+                'score' => 0, // initial score, will be updated after grading
+                'total_scores' => 0, // initial total score
             ]);
 
             foreach ($validated['answers'] as $answerData) {
@@ -63,7 +76,7 @@ class ExamAttemptController extends Controller
                         'answer_text' => json_encode($answer),
                     ]);
                 } else {
-                    // Single answer, try find choice by ID
+                    // Single answer, try to find choice by ID
                     $choice = Choice::where('question_id', $answerData['questionId'])
                         ->where('id', $answer)
                         ->first();
@@ -74,7 +87,8 @@ class ExamAttemptController extends Controller
                         'choice_id' => $choice ? $choice->id : null,
                         'answer_text' => $choice ? $choice->choice_text : $answer,
                     ]);
-                }
+                } 
+                
             }
 
             // Grade exam attempt immediately
@@ -147,75 +161,74 @@ class ExamAttemptController extends Controller
     }
 
     // Grade the exam attempt and update score
-  public function gradeExamAttempt($id)
-{
-    $attempt = ExamAttempt::with(['answers.choice', 'answers.question.choices'])->findOrFail($id);
+    public function gradeExamAttempt($id)
+    {
+        $attempt = ExamAttempt::with(['answers.choice', 'answers.question.choices'])->findOrFail($id);
 
-    $totalPoints = 0;
-    $earnedPoints = 0;
+        $totalPoints = 0;
+        $earnedPoints = 0;
 
-    foreach ($attempt->answers as $answer) {
-        $question = $answer->question;
-        $points = $question->points ?? 1; // default 1 point if none set
-        $totalPoints += $points;
+        foreach ($attempt->answers as $answer) {
+            $question = $answer->question;
+            $points = $question->points ?? 1; // default 1 point if none set
+            $totalPoints += $points;
 
-        // Get all correct choice texts for this question and normalize them
-        $correctAnswers = $question->choices
-            ->where('is_correct', true)
-            ->pluck('choice_text')
-            ->map(fn($a) => strtolower(trim($a)))
-            ->sort()
-            ->values()
-            ->all();
+            // Get all correct choice texts for this question and normalize them
+            $correctAnswers = $question->choices
+                ->where('is_correct', true)
+                ->pluck('choice_text')
+                ->map(fn($a) => strtolower(trim($a)))
+                ->sort()
+                ->values()
+                ->all();
 
-        // Determine student's answers:
-        if ($answer->choice_id !== null && $answer->choice !== null) {
-            // Single choice answer stored as related choice
-            $studentAnswers = [strtolower(trim($answer->choice->choice_text))];
-        } else {
-            // Multiple choice or text answer stored in answer_text
-            $decoded = json_decode($answer->answer_text, true);
-
-            if (is_array($decoded)) {
-                // Map choice IDs to choice texts if possible
-                $choicesMap = $question->choices->pluck('choice_text', 'id')->toArray();
-
-                $studentAnswers = array_map(function ($ans) use ($choicesMap) {
-                    return isset($choicesMap[$ans]) ? strtolower(trim($choicesMap[$ans])) : strtolower(trim($ans));
-                }, $decoded);
-                sort($studentAnswers);
+            // Determine student's answers:
+            if ($answer->choice_id !== null && $answer->choice !== null) {
+                // Single choice answer stored as related choice
+                $studentAnswers = [strtolower(trim($answer->choice->choice_text))];
             } else {
-                // Plain string answer
-                $studentAnswers = [strtolower(trim($answer->answer_text ?? ''))];
+                // Multiple choice or text answer stored in answer_text
+                $decoded = json_decode($answer->answer_text, true);
+
+                if (is_array($decoded)) {
+                    // Map choice IDs to choice texts if possible
+                    $choicesMap = $question->choices->pluck('choice_text', 'id')->toArray();
+
+                    $studentAnswers = array_map(function ($ans) use ($choicesMap) {
+                        return isset($choicesMap[$ans]) ? strtolower(trim($choicesMap[$ans])) : strtolower(trim($ans));
+                    }, $decoded);
+                    sort($studentAnswers);
+                } else {
+                    // Plain string answer
+                    $studentAnswers = [strtolower(trim($answer->answer_text ?? ''))];
+                }
+            }
+
+            // Compare normalized student answers with normalized correct answers
+            $isCorrect = ($studentAnswers === $correctAnswers);
+
+            if ($isCorrect) {
+                $earnedPoints += $points;
             }
         }
 
-        // Compare normalized student answers with normalized correct answers
-        $isCorrect = ($studentAnswers === $correctAnswers);
+        // Save results
+        $attempt->score = $earnedPoints;
+        $attempt->status = 'graded';
+        $attempt->total_scores = $totalPoints;
+        $attempt->save();
 
-        if ($isCorrect) {
-            $earnedPoints += $points;
-        }
+        $percentage = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100, 2) : 0;
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Exam attempt graded successfully',
+            'data' => [
+                'attempt' => new ExamAttemptResource($attempt),
+                'percentage' => $percentage,
+            ],
+        ]);
     }
-
-    // Save results
-    $attempt->score = $earnedPoints;
-    $attempt->status = 'graded';
-    $attempt->total_points = $totalPoints;
-    $attempt->save();
-
-    $percentage = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100, 2) : 0;
-
-    return response()->json([
-        'status' => 200,
-        'message' => 'Exam attempt graded successfully',
-        'data' => [
-            'attempt' => new ExamAttemptResource($attempt),
-            'percentage' => $percentage,
-        ],
-    ]);
-}
-
 
     // Save answers (optional additional endpoint)
     public function saveAnswers(Request $request, ExamAttempt $examAttempt)
@@ -262,7 +275,8 @@ class ExamAttemptController extends Controller
         }
     }
 
- public function getEnrollmentData(Request $request)
+    // Get enrollment data
+    public function getEnrollmentData(Request $request)
     {
         try {
             // Optionally handle time range filter
@@ -289,7 +303,8 @@ class ExamAttemptController extends Controller
         }
     }
 
-     public function getAverageScores()
+    // Get average scores
+    public function getAverageScores()
     {
         try {
             $averageScore = ExamAttempt::avg('score');  // Calculate the average score from all exam attempts
@@ -306,5 +321,4 @@ class ExamAttemptController extends Controller
             ]);
         }
     }
-
 }

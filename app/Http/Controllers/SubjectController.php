@@ -14,11 +14,9 @@ class SubjectController extends Controller
     public function index()
     {
         $subjects = Subject::all();
-
         if ($subjects->count() > 0) {
             return SubjectResource::collection($subjects);
         }
-
         return response()->json([
             'status' => false,
             'message' => 'No subjects found',
@@ -104,16 +102,13 @@ class SubjectController extends Controller
                 'description' => $request->input('description'),
                 'is_active' => $request->boolean('is_active', $subject->is_active),
             ];
-
             if ($request->hasFile('subject_image')) {
                 if ($subject->subject_image) {
                     Storage::disk('public')->delete($subject->subject_image);
                 }
-
                 $imagePath = $request->file('subject_image')->store('subject_images', 'public');
                 $data['subject_image'] = $imagePath;
             }
-
             $subject->update($data);
 
             return response()->json([
@@ -161,5 +156,37 @@ class SubjectController extends Controller
         'message' => 'Total subjects fetched successfully',
         'data' => $totalSubjects,
     ]);
+}
+
+public function getStudentAndExamCount(Subject $subject)
+{
+    try {
+        // Count distinct students who have taken exams for this subject
+        $studentCount = \DB::table('exam_attempts')
+            ->join('exams', 'exams.id', '=', 'exam_attempts.exam_id') // Join with 'exams'
+            ->where('exams.subject_id', $subject->id)               // Filter by subject
+            ->distinct('exam_attempts.user_id')                      // Count distinct students (user_id)
+            ->count('exam_attempts.user_id');                         // Count distinct students
+        
+        // Count total exams for this subject
+        $examCount = \DB::table('exams')
+            ->where('exams.subject_id', $subject->id)               // Filter by subject
+            ->count();                                              // Count total exams
+        
+        return response()->json([
+            'status' => true,
+            'message' => 'Total students and exams count fetched successfully',
+            'data' => [
+                'student_count' => $studentCount,
+                'exam_count' => $examCount
+            ],
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Error fetching student and exam count',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 }
 }

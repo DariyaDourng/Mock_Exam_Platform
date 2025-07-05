@@ -58,7 +58,6 @@ class QuestionController extends Controller
             if (($data['format'] ?? null) === 'image' && $request->hasFile('question_image')) {
                 $imagePath = $request->file('question_image')->store('questions', 'public');
             }
-
             // Create question
             $question = Question::create([
                 'subject_id' => $data['subject_id'],
@@ -69,12 +68,10 @@ class QuestionController extends Controller
                 'points' => $data['points'] ?? 1,
                 'explanation' => $data['explanation'] ?? null,
             ]);
-
             // Create choices
             foreach ($data['choices'] as $choice) {
                 $question->choices()->create($choice);
             }
-
             return response()->json([
                 'status' => 200,
                 'message' => 'Question created successfully',
@@ -141,7 +138,7 @@ class QuestionController extends Controller
             // Update question fields
             $question->subject_id = $data['subject_id'] ?? $question->subject_id;
             $question->type = $data['type'] ?? $question->type;
-            $question->format = $data['format'] ?? $question->format;
+            $question->format = $data['format'] ?? $question->format ?? null;
             $question->question_text = ($data['format'] === 'text' && isset($data['question_text'])) ? $data['question_text'] : $question->question_text;
             $question->points = $data['points'] ?? $question->points;
             $question->explanation = $data['explanation'] ?? $question->explanation;

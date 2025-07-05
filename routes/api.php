@@ -15,6 +15,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\UserExamController;
+use App\Models\Subject;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
@@ -112,7 +113,9 @@ Route::put('exams/{exam}', [ExamController::class, 'update']);
 Route::delete('exams/{exam}', [ExamController::class, 'destroy']);
 
 // Question Routes
-Route::apiResource('questions', QuestionController::class);
+ Route::apiResource('questions', QuestionController::class);
+
+// Route::get('/questions', [QuestionController::class, 'show']);
 
 // Delete a question from an exam
 Route::delete('/exams/{exam}/questions/{question}', [ExamController::class, 'removeQuestionFromExam']);
@@ -164,9 +167,11 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     ]);
 });
 
-Route::get('/leaderboard/{subjectId}', [LeaderBoardController::class, 'leaderboard']);
+// Route::get('/leaderboard/{subjectId}', [LeaderBoardController::class, 'leaderboard']);
 
+Route::get('/leaderboard', [LeaderBoardController::class, 'fullLeaderboard']);
 
+// Route::get('/user-exams', [UserExamController::class, 'userExams']);
 
 Route::get('/user-exams', [UserExamController::class, 'userExams']);
 
@@ -176,3 +181,7 @@ Route::get('/average-scores', [ExamAttemptController::class, 'getAverageScores']
 Route::get('/totalsubjects', [SubjectController::class, 'getTotalSubjects']);
 Route::get('/countExams', [ExamController::class, 'getTotalExams']);
 Route::get('/student', [UserController::class, 'getStudents']);
+
+Route::post('/questions', [QuestionController::class, 'store']);
+
+Route::get('subjects/{subject}/student-and-exam-count', [SubjectController::class, 'getStudentAndExamCount']);

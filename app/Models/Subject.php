@@ -25,5 +25,11 @@ class Subject extends Model
         return $this->hasMany(Exam::class);
     }
 
+     public function exams()
+    {
+        // Assuming you have a many-to-many relationship through a pivot table
+        return $this->belongsToMany(Exam::class, 'students_exams', 'subject_id', 'exam_id');
+    }
+
     
 }
