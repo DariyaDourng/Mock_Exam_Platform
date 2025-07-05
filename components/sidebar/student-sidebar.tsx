@@ -7,7 +7,7 @@ import Image from 'next/image';
 import {
   HomeIcon,
   ClipboardDocumentCheckIcon,
-  QuestionMarkCircleIcon,
+  ChartBarIcon,
   Bars3Icon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
@@ -22,40 +22,48 @@ export default function AdminSidebarPage() {
     { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
     { name: 'Available Exam', icon: ClipboardDocumentCheckIcon, path: '/dashboard/tests' },
     { name: 'Your Result', icon: ClipboardDocumentCheckIcon, path: '/dashboard/scores' },
-    { name: 'Leaderboard', icon: QuestionMarkCircleIcon, path: '/dashboard/leaderboard' },
+    { name: 'Leaderboard', icon: ChartBarIcon, path: '/dashboard/leaderboard' },
   ];
 
   return (
     <>
-      {/* Mobile Toggle Button */}
+      {/* Mobile Open Sidebar Button */}
       <button
         onClick={toggleSidebar}
-        className="md:hidden p-4 focus:outline-none"
-        aria-label="Toggle sidebar"
+        className="md:hidden p-4 focus:outline-none top-0"
+        aria-label="Open sidebar"
       >
-        {sidebarOpen ? (
-          <XMarkIcon className="h-6 w-6" />
-        ) : (
-          <Bars3Icon className="h-6 w-6" />
-        )}
+        <Bars3Icon className="h-6 w-6 text-gray-700" />
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-white border transform transition-transform duration-300 ease-in-out
+        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-white border-r transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:block`}
       >
         <div className="flex flex-col h-full px-4 py-6 overflow-y-auto">
-          {/* Logo and Title */}
-          <div className="flex items-center gap-2 mb-6 justify-center">
-            <Image
-              src="/images/Applogo.png"
-              alt="Online Exam Platform Logo"
-              width={40}
-              height={40}
-              priority
-            />
-            <h1 className="text-xl text-indigo-600 font-semibold">Mock-Exam</h1>
+          
+          {/* Logo & Close Button */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/images/Applogo.png"
+                alt="Online Exam Platform Logo"
+                width={40}
+                height={40}
+                priority
+              />
+              <h1 className="text-xl text-indigo-600 font-semibold">Mock-Exam</h1>
+            </div>
+
+            {/* Close Sidebar Button (only mobile) */}
+            <button
+              onClick={toggleSidebar}
+              className="md:hidden p-2 focus:outline-none"
+              aria-label="Close sidebar"
+            >
+              <XMarkIcon className="h-6 w-6 text-gray-600" />
+            </button>
           </div>
 
           {/* Menu Items */}
@@ -84,6 +92,14 @@ export default function AdminSidebarPage() {
           </ul>
         </div>
       </aside>
+
+      {/* Optional: Dark overlay when sidebar is open (Mobile) */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black opacity-30 z-40 md:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
     </>
   );
 }

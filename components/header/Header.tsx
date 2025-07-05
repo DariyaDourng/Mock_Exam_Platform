@@ -67,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         className="flex items-center justify-center h-10 w-10 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
         aria-label="Toggle sidebar"
       >
-        <Bars3Icon className="h-6 w-6" />
+        {/* <Bars3Icon className="h-6 w-6" /> */}
       </button>
 
       {/* Spacer */}

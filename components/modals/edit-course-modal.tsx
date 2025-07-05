@@ -101,14 +101,13 @@ export function EditCourseModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
     try {
       await onSubmit(formData)
-      toast.success("Course updated successfully")
+      toast.success("Subject updated successfully")
       onClose()
     } catch (error) {
-      console.error("Error updating course:", error)
-      toast.error("Failed to update course")
+      console.error("Error updating subject:", error)
+      toast.error("Failed to update subject")
     } finally {
       setIsSubmitting(false)
     }

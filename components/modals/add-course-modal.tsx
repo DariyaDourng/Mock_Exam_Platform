@@ -67,9 +67,7 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
       toast.error(imageError)
       return
     }
-
     setIsSubmitting(true)
-
     try {
       await onSubmit(courseData)
       // toast.success("Course created successfully")

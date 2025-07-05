@@ -1,8 +1,6 @@
-'use client';
-
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
+import dayjs from "dayjs"; // Import dayjs for formatting
 import {
   Card,
   CardContent,
@@ -23,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
 
 interface Choice {
   id: number;
@@ -99,6 +98,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
         setTimeLeft(remaining > 0 ? remaining : durationSeconds);
 
+        // Retrieve answers from localStorage
         const savedAnswers = localStorage.getItem(answersKey);
         if (savedAnswers) {
           try {
@@ -108,12 +108,15 @@ export default function StudentTest({ params }: { params: { id: string } }) {
           }
         }
 
+        // Retrieve the current question index from localStorage
         const savedCurrentQuestion = localStorage.getItem(currentQuestionKey);
         if (savedCurrentQuestion) {
           const idx = parseInt(savedCurrentQuestion, 10);
           if (!isNaN(idx) && idx >= 0 && idx < res.data.data.questions.length) {
-            setCurrentQuestion(idx);
+            setCurrentQuestion(idx);  // Set to saved question index
           }
+        } else {
+          setCurrentQuestion(0); // Default to first question if none is saved
         }
 
         setLoading(false);
@@ -130,12 +133,12 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (!hasMounted) return;
-    localStorage.setItem(answersKey, JSON.stringify(answers));
+    localStorage.setItem(answersKey, JSON.stringify(answers)); // Save answers to localStorage
   }, [answers, hasMounted]);
 
   useEffect(() => {
     if (!hasMounted) return;
-    localStorage.setItem(currentQuestionKey, currentQuestion.toString());
+    localStorage.setItem(currentQuestionKey, currentQuestion.toString()); // Save current question index
   }, [currentQuestion, hasMounted]);
 
   useEffect(() => {
@@ -224,16 +227,18 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
   async function handleSubmitTest() {
     if (!testData) return;
-
     setTestSubmitted(true);
-
     const userId = await fetchUserId();
     if (!userId) {
       setError("User not logged in or session expired");
       setTestSubmitted(false);
       return;
     }
-
+    const startTimeNum = parseInt(localStorage.getItem(startTimeKey) || "0", 10);
+    const finishTimeNum = Date.now(); // Finish time (time at submission)
+    const timeSpent = finishTimeNum - startTimeNum; // Time spent in milliseconds
+    const durationMinutes = Math.floor(timeSpent / 60000); // Convert to minutes
+    const durationSecondsLeft = Math.floor((timeSpent % 60000) / 1000); // Remaining seconds
     const payload = {
       exam_id: testId,
       user_id: userId,
@@ -241,6 +246,10 @@ export default function StudentTest({ params }: { params: { id: string } }) {
         questionId: q.id,
         answer: answers[idx] || null,
       })),
+      date_time_taken: dayjs(startTimeNum).format("YYYY-MM-DD HH:mm:ss"), // Format the start time
+      date_time_finish: dayjs(finishTimeNum).format("YYYY-MM-DD HH:mm:ss"), // Format the finish time
+      duration_minutes: durationMinutes,  // Send the duration in minutes
+      duration_seconds: durationSecondsLeft,  // Send the duration in seconds
     };
 
     try {
@@ -290,10 +299,13 @@ export default function StudentTest({ params }: { params: { id: string } }) {
   const question = testData.questions[validCurrentQuestion];
   const progress = ((validCurrentQuestion + 1) / testData.questions.length) * 100;
 
-  const options = question.choices.map((choice) => ({
-    id: String(choice.id),
-    text: choice.choice_text,
-  }));
+  // Fixed the map by checking if choices is an array
+  const options = Array.isArray(question.choices)
+    ? question.choices.map((choice) => ({
+        id: String(choice.id),
+        text: choice.choice_text,
+      }))
+    : [];
 
   const flaggedCount = Object.values(flaggedQuestions).filter(Boolean).length;
 
@@ -329,8 +341,8 @@ export default function StudentTest({ params }: { params: { id: string } }) {
               Type: {questionTypeLabel(question.type)}
             </p>
           </div>
-          <div className="flex items-center gap-2 rounded-md border bg-background p-2 text-sm">
-            <Clock className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 rounded-md border-[2px] border-indigo-400 bg-background text-indigo-500 py-2 font-semibold px-4 text-lg">
+            <Clock className="h-4 w-4 text-indigo-500 font-semibold" />
             <span className={timeLeft < 60 ? "text-red-500 font-bold" : ""}>{formatTime(timeLeft)}</span>
           </div>
         </div>
@@ -472,50 +484,6 @@ export default function StudentTest({ params }: { params: { id: string } }) {
             </CardFooter>
           </Card>
         )}
-
-        {/* Question navigation buttons */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
-            {flaggedCount > 0 && (
-              <div className="text-xs text-yellow-600 flex items-center gap-1">
-                <Flag className="h-3 w-3" /> = Flagged for review
-              </div>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {testData.questions.map((_, index) => {
-              const isFlagged = flaggedQuestions[index];
-              const isCurrentQuestion = validCurrentQuestion === index;
-              const ans = answers[index];
-              const answered = Array.isArray(ans) ? ans.length > 0 : typeof ans === "string" && ans !== "";
-
-              return (
-                <div key={index} className="relative">
-                  <Button
-                    variant={isCurrentQuestion ? "default" : answered ? "outline" : "ghost"}
-                    size="sm"
-                    className={`h-8 w-8 p-0
-                      ${answered && !isCurrentQuestion ? "border-primary text-primary" : ""}
-                      ${isCurrentQuestion ? "bg-primary text-white hover:bg-primary/90" : ""}
-                    `}
-                    onClick={() => {
-                      setCurrentQuestion(index);
-                      setShowRequiredAlert(false);
-                    }}
-                    aria-label={`Go to question ${index + 1}`}
-                  >
-                    {index + 1}
-                  </Button>
-                  {isFlagged && (
-                    <div className="absolute -top-1 -right-1">
-                      <Flag className="h-3 w-3 fill-yellow-500 text-yellow-600" />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
     </div>
   );

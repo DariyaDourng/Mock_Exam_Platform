@@ -52,19 +52,19 @@ export default function AdminDashboard() {
   }, [])
 
   // Chart data
-  const enrollmentChartData = {
-    labels: enrollmentData.map((data) => data.month),
-    datasets: [
-      {
-        label: "Student Enrollments",
-        data: enrollmentData.map((data) => data.count),
-        borderColor: "rgb(99, 102, 241)",
-        backgroundColor: "rgba(99, 102, 241, 0.1)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  }
+  // const enrollmentChartData = {
+  //   labels: enrollmentData.map((data) => data.month),
+  //   datasets: [
+  //     {
+  //       label: "Student Enrollments",
+  //       data: enrollmentData.map((data) => data.count),
+  //       borderColor: "rgb(99, 102, 241)",
+  //       backgroundColor: "rgba(99, 102, 241, 0.1)",
+  //       fill: true,
+  //       tension: 0.4,
+  //     },
+  //   ],
+  // }
 
   return (
     <div className="space-y-6">
@@ -104,8 +104,8 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{totalCourses}</div>
             <div className="flex items-center text-xs text-muted-foreground">
-              <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
-              <span>+2 from last month</span>
+              {/* <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
+              <span>+2 from last month</span> */}
             </div>
           </CardContent>
         </Card>
@@ -117,8 +117,8 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{totalStudents}</div>
             <div className="flex items-center text-xs text-muted-foreground">
-              <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
-              <span>+24 from last month</span>
+              {/* <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
+              <span>+24 from last month</span> */}
             </div>
           </CardContent>
         </Card>
@@ -128,10 +128,10 @@ export default function AdminDashboard() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgScore}%</div>
+            <div className="text-2xl font-bold">{Number(avgScore).toFixed(2)}</div>
             <div className="flex items-center text-xs text-muted-foreground">
-              <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
-              <span>+3% from last month</span>
+              {/* <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
+              <span>+3% from last month</span> */}
             </div>
           </CardContent>
         </Card>

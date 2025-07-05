@@ -64,14 +64,14 @@ export default function TestsPage() {
             <h1 className="text-3xl font-bold">Available Tests</h1>
             <p className="text-muted-foreground">Choose a test to start practicing</p>
           </div>
-          <div className="flex gap-2">
+          {/* <div className="flex gap-2">
             <Button variant="outline" size="sm">
               Filter
             </Button>
             <Button variant="outline" size="sm">
               Sort
             </Button>
-          </div>
+          </div> */}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -80,9 +80,9 @@ export default function TestsPage() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <CardTitle>{test.name}</CardTitle>
-                  <Badge variant="outline" className={getDifficultyColor(test.difficulty)}>
+                  {/* <Badge variant="outline" className={getDifficultyColor(test.difficulty)}>
                     {test.difficulty}
-                  </Badge>
+                  </Badge> */}
                 </div>
                 <CardDescription>{test.description}</CardDescription>
               </CardHeader>
@@ -97,7 +97,7 @@ export default function TestsPage() {
                     <span>{test.duration} minutes</span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <Star className="mr-2 h-4 w-4 text-muted-foreground" />
+                    {/* <Star className="mr-2 h-4 w-4 text-muted-foreground" /> */}
                     <span>{test.subject}</span>
                   </div>
                 </div>

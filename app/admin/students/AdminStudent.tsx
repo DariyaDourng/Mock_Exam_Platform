@@ -13,35 +13,31 @@ import { MoreHorizontal, Search, Calendar, BookOpen } from "lucide-react"
 import axios from "axios"
 
 export default function AdminStudentsPage() {
-  const [students, setStudents] = useState<any[]>([]) // Initialize as empty array
+  const [students, setStudents] = useState<any[]>([
+    { 
+      id: 1,
+      name: 'Dourng Dariya',
+      email: 'dariyaduong1008@gmail.com',
+      courses: '1',
+      exams: 1,
+      avgScore: 85,
+      lastActive: '2025-06-01',
+      status: 'active',
+    },
+    {
+      id: 2,
+      name: 'Jeong Jaehyun',
+      email: 'dariyadourng1002@gmail.com',
+      courses: '2',
+      exams: 1,
+      avgScore: 92,
+      lastActive: '2025-05-29',
+      status: 'inactive',
+    },
+    // Add more static student data here
+  ]) // Static data instead of fetching from API
   const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null) // Error state to capture any fetch errors
-
-  // Fetch users (students) data from the backend
-  const fetchStudents = async () => {
-    setLoading(true)
-    setError(null) // Reset error state before making the request
-    try {
-      const response = await axios.get("http://localhost:8000/api/student")  // Adjust the API if necessary
-      console.log("API Response:", response.data) // Log the response to verify the structure
-
-      if (response.data && Array.isArray(response.data.data)) {
-        setStudents(response.data.data)  // Directly set the students list
-      } else {
-        setError("No student data found")
-      }
-    } catch (error: any) {
-      console.error("Error fetching students:", error)
-      setError("Failed to fetch student data")  // Set error message if fetch fails
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Handle fetching students when the component mounts
-  useEffect(() => {
-    fetchStudents()
-  }, [])
+  const [error, setError] = useState<string | null>(null)
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -62,11 +58,11 @@ export default function AdminStudentsPage() {
   }
 
   if (loading) {
-    return <div>Loading...</div> // Display loading state while data is being fetched
+    return <div>Loading...</div>
   }
 
   if (error) {
-    return <div>Error: {error}</div> // Display error message if fetch fails
+    return <div>Error: {error}</div>
   }
 
   return (

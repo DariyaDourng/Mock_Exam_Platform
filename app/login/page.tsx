@@ -58,7 +58,7 @@ const Login: React.FC = () => {
 
       toast.success('Login Successful!');
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/admin/dashboard');
       }, 1000);
     } catch (error: any) {
       if (error.response?.status === 401) {

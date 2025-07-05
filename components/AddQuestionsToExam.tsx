@@ -1,62 +1,45 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Eye, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Question {
   id: number;
   question_text: string | null;
   question_image?: string | null;
-  subject_name?: string;
+  subject_name?: string; // Directly retrieving the subject_name
   type?: string;
   points?: number;
+  format?: string;
 }
 
-interface AddQuestionsToExamProps {
-  examId: number;
-}
-
-export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) {
+export default function AddQuestionsToExam({ examId }: { examId: number }) {
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [selectedQuestionIds, setSelectedQuestionIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('all');
   const [loading, setLoading] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
 
+  const itemsPerPage = 10; // Customize items per page
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch questions related to the current exam
   useEffect(() => {
     async function fetchQuestions() {
       setLoading(true);
       try {
-        const res = await axios.get('http://localhost:8000/api/questions');
-        // Handle data structure (array or wrapped in data)
+        const res = await axios.get(`http://localhost:8000/api/exams/${examId}/questions`);
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setQuestions(data);
+        setQuestions(data); // Set questions related to the specific exam
       } catch (error) {
         toast.error('Failed to load questions');
         setQuestions([]);
@@ -64,160 +47,128 @@ export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) 
         setLoading(false);
       }
     }
+
     fetchQuestions();
-  }, []);
+  }, [examId]);
 
-  // Filter questions by search text and subject
-  const filteredQuestions = questions.filter((q) => {
-    const text = (q.question_text || '').toLowerCase();
-    const subject = q.subject_name || 'Uncategorized';
-
-    const matchesSearch = text.includes(searchQuery.toLowerCase());
-    const matchesSubject = subjectFilter === 'all' || subject === subjectFilter;
-
-    return matchesSearch && matchesSubject;
+  // Filter questions based on search query
+  const filteredQuestions = questions.filter((question) => {
+    const searchableText = typeof question.question_text === 'string' ? question.question_text : '';
+    return searchableText.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  // Unique subjects list for filter dropdown
-  const subjects = ['all', ...Array.from(new Set(questions.map((q) => q.subject_name || 'Uncategorized')))];
+  // Helper function to render question image
+  const renderQuestionImage = (imageUrl: string | null) => {
+    if (!imageUrl) return null;
 
-  // Toggle select/deselect question ID
-  const toggleSelectQuestion = (id: number) => {
-    setSelectedQuestionIds((prev) =>
-      prev.includes(id) ? prev.filter((qid) => qid !== id) : [...prev, id]
-    );
+    const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:8000/storage/${imageUrl}`;
+    return <img src={fullImageUrl} alt="Question Image" className="max-h-16 rounded" />;
   };
 
-  // Select or deselect all filtered questions
-  const toggleSelectAll = () => {
-    if (selectedQuestionIds.length === filteredQuestions.length) {
-      setSelectedQuestionIds([]);
-    } else {
-      setSelectedQuestionIds(filteredQuestions.map(q => q.id));
-    }
+  // Handle Preview button click
+  const handlePreviewClick = (q: Question) => {
+    if (!q || !q.id) return;
+    router.push(`/admin/question-bank/${q.id}`); // Using 'q' here to access the question data
   };
 
-  // Add selected questions to exam via API call
-  const handleAddToExam = async () => {
-    if (selectedQuestionIds.length === 0) {
-      toast.error('Please select at least one question');
-      return;
-    }
-    setIsAdding(true);
-    try {
-      await axios.post(`http://localhost:8000/api/exams/${examId}/questions`, {
-        question_ids: selectedQuestionIds,
-      });
-      toast.success('Questions added to exam!');
-      setSelectedQuestionIds([]);
-    } catch (error) {
-      toast.error('Failed to add questions');
-    } finally {
-      setIsAdding(false);
-    }
-  };
+  // Pagination calculation
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
 
   return (
-    <Card>
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle>Add Questions to Exam #{examId}</CardTitle>
-        <div className="flex items-center space-x-2">
-          <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by subject" />
-            </SelectTrigger>
-            <SelectContent>
-              {subjects.map((subject) => (
-                <SelectItem key={subject} value={subject}>
-                  {subject === 'all' ? 'All Subjects' : subject}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-8"
-              placeholder="Search questions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              type="search"
-            />
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">Questions for Exam #{examId}</CardTitle>
+            <div className="flex items-center gap-2">
+              <Input
+                type="search"
+                placeholder="Search questions..."
+                className="w-[250px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Search className="h-5 w-5 text-muted-foreground" />
+              {/* <Button
+                onClick={() => setIsAddModalOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Question
+              </Button> */}
+            </div>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent>
-        {loading ? (
-          <p className="text-center py-10">Loading questions...</p>
-        ) : filteredQuestions.length === 0 ? (
-          <p className="text-center py-10">No questions found.</p>
-        ) : (
-          <>
+        <CardContent>
+          {loading ? (
+            <p className="text-center py-10">Loading questions...</p>
+          ) : paginatedQuestions.length === 0 ? (
+            <p className="text-center py-10">No questions found for this exam.</p>
+          ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40px]">
-                    <input
-                      type="checkbox"
-                      checked={selectedQuestionIds.length === filteredQuestions.length}
-                      onChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Question</TableHead>
+                  <TableHead className="w-[50px]">ID</TableHead>
+                  <TableHead className="w-[40%]">Question</TableHead>
                   <TableHead>Subject</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead className="w-[80px]">Points</TableHead>
+                  <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-             <TableBody>
-  {filteredQuestions.map((q, i) => (
-    <TableRow key={q.id}>
-      <TableCell>
-        <input
-          type="checkbox"
-          checked={selectedQuestionIds.includes(q.id)}
-          onChange={() => toggleSelectQuestion(q.id)}
-        />
-      </TableCell>
-      <TableCell>{i + 1}</TableCell>
-      <TableCell>
-        {q.question_text ? (
-          q.question_text
-        ) : q.question_image ? (
-          <img
-            src={
-              q.question_image.startsWith('http')
-                ? q.question_image
-                : `http://localhost:8000${q.question_image}`
-            }
-            alt={`Question ${i + 1} Image`}
-            className="max-h-24 max-w-full object-contain"
-          />
-        ) : (
-          '[No Question Content]'
-        )}
-      </TableCell>
-      <TableCell>{q.subject_name || 'Uncategorized'}</TableCell>
-      <TableCell className="capitalize">{q.type?.replace('-', ' ')}</TableCell>
-      <TableCell>{q.points || 1}</TableCell>
-    </TableRow>
-  ))}
-</TableBody>
-
+              <TableBody>
+                {paginatedQuestions.map((q, i) => (
+                  <TableRow key={q.id}>
+                    <TableCell>{i + 1}</TableCell>
+                    <TableCell>
+                      {q.format === 'text' && q.question_text ? (
+                        <span className="line-clamp-2">{q.question_text}</span>
+                      ) : q.format === 'image' && q.question_image ? (
+                        renderQuestionImage(q.question_image)
+                      ) : (
+                        <span className="italic text-sm text-muted-foreground">[No Question Text]</span>
+                      )}
+                    </TableCell>
+                    {/* Directly use subject_name */}
+                    <TableCell>{q.subject_name || 'No Subject'}</TableCell>
+                    <TableCell>{q.type}</TableCell>
+                    <TableCell>{q.points || 1}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {/* Preview Button */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handlePreviewClick(q)} // Pass the correct question object
+                          aria-label="Preview"
+                        >
+                          <Eye className="h-4 w-4 text-indigo-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
+          )}
 
-            <Button
-              onClick={handleAddToExam}
-              disabled={isAdding}
-              className="mt-4 w-full"
-            >
-              {isAdding ? 'Adding...' : 'Add Selected Questions to Exam'}
+          {/* Pagination Controls */}
+          <div className="flex justify-center items-center gap-4 mt-4">
+            <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}>
+              Previous
             </Button>
-          </>
-        )}
-      </CardContent>
-    </Card>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
+              Next
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

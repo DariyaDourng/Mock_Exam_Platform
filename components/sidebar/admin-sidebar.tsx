@@ -17,11 +17,11 @@ import {
 
 const menuItems = [
   { name: 'Dashboard', icon: HomeIcon, path: '/admin/dashboard' },
-  { name: 'Manage Course', icon: BookOpenIcon, path: '/admin/courses' },
+  { name: 'Manage Subject', icon: BookOpenIcon, path: '/admin/subjects' },
   { name: 'Manage Exam', icon: ClipboardDocumentCheckIcon, path: '/admin/exams' },
   { name: 'Question Bank', icon: QuestionMarkCircleIcon, path: '/admin/question-bank' },
   { name: 'Manage Student', icon: UsersIcon, path: '/admin/students' },
-  { name: 'Performance', icon: ChartBarIcon, path: '/admin/performances' },
+  { name: 'Leaderboard', icon: ChartBarIcon, path: '/admin/leaderboard' },
 ];
 
 export default function AdminSidebarPage() {

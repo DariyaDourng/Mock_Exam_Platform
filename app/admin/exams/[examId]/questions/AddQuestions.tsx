@@ -2,105 +2,102 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+
+interface Question {
+  id: number;
+  question_text: string | null;
+  question_image?: string | null;
+  subject_name?: string;
+  type?: string;
+  points?: number;
+}
 
 interface AddQuestionsToExamProps {
   examId: number;
 }
 
 export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) {
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [selectedQuestionIds, setSelectedQuestionIds] = useState<number[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchQuestions() {
+      setLoading(true);
       try {
-        // Fetch all questions or only those related to the examId if your API supports that
-        const res = await axios.get('http://localhost:8000/api/questions');
-        const allQuestions = Array.isArray(res.data) ? res.data : res.data.data || [];
-
-        // Filter questions by examId association
-        // Assuming your question objects have a field like `exam_ids` (array) or `exam_id`
-        const filteredQuestions = allQuestions.filter((q: any) => {
-          if (Array.isArray(q.exam_ids)) {
-            return q.exam_ids.includes(examId);
-          }
-          // or if there's a single exam_id field:
-          if (typeof q.exam_id === 'number') {
-            return q.exam_id === examId;
-          }
-          return false;
-        });
-
-        setQuestions(filteredQuestions);
+        // Fetch questions specifically for this exam by using the examId in the URL
+        const res = await axios.get(`http://localhost:8000/api/exams/${examId}/questions`);
+        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
+        setQuestions(data);
       } catch (error) {
-        console.error('Failed to load questions:', error);
+        toast.error('Failed to load questions');
         setQuestions([]);
+      } finally {
+        setLoading(false);
       }
     }
-
     fetchQuestions();
   }, [examId]);
 
-  const toggleSelectQuestion = (id: number) => {
-    setSelectedQuestionIds((prev) =>
-      prev.includes(id) ? prev.filter((qid) => qid !== id) : [...prev, id]
-    );
-  };
-
-  const handleSubmit = async () => {
-    if (selectedQuestionIds.length === 0) {
-      alert('Please select at least one question.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await axios.post(`http://localhost:8000/api/exams/${examId}/questions`, {
-        question_ids: selectedQuestionIds,
-      });
-      alert('Questions added to exam!');
-      setSelectedQuestionIds([]);
-    } catch (error) {
-      console.error('Failed to add questions:', error);
-      alert('Failed to add questions.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Add Questions to Exam #{examId}</h1>
+    <Card>
+      <CardHeader>
+        <CardTitle>Questions for Exam #{examId}</CardTitle>
+      </CardHeader>
 
-      {questions.length === 0 ? (
-        <p>No questions found for this exam.</p>
-      ) : (
-        <ul className="space-y-3 mb-4">
-          {questions.map((q) => (
-            <li key={q.id} className="flex items-center space-x-2">
-              <input
-                id={`question-${q.id}`}
-                type="checkbox"
-                checked={selectedQuestionIds.includes(q.id)}
-                onChange={() => toggleSelectQuestion(q.id)}
-                className="cursor-pointer"
-              />
-              <label htmlFor={`question-${q.id}`} className="cursor-pointer select-none">
-                {q.question_text || 'Image Question'}
-              </label>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <button
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded disabled:opacity-50"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? 'Adding...' : 'Add Selected Questions'}
-      </button>
-    </div>
+      <CardContent>
+        {loading ? (
+          <p className="text-center py-10">Loading questions...</p>
+        ) : questions.length === 0 ? (
+          <p className="text-center py-10">No questions found for this exam.</p>
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Question</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Points</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {questions.map((q, i) => (
+                  <TableRow key={q.id}>
+                    <TableCell>{i + 1}</TableCell>
+                    <TableCell>
+                      {q.question_text ? (
+                        q.question_text
+                      ) : q.question_image ? (
+                        <img
+                          src={
+                            q.question_image && q.question_image.startsWith('http')
+                              ? q.question_image
+                              : `http://localhost:8000${q.question_image}`
+                          }
+                          alt={`Question ${i + 1} Image`}
+                          className="max-h-24 max-w-full object-contain"
+                        />
+                      ) : (
+                        '[No Question Content]'
+                      )}
+                    </TableCell>
+                    <TableCell>{q.subject_name || 'Uncategorized'}</TableCell>
+                    <TableCell className="capitalize">{q.type?.replace('-', ' ')}</TableCell>
+                    <TableCell>{q.points || 1}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
