@@ -149,6 +149,7 @@ public function register(Request $request)
                 'status'  => 200,
         'message' => 'Login successful',
         'token' => $token,
+        
         'user' => [
             'id' => $user->id,
             'role_id' => $user->role_id,
@@ -201,26 +202,23 @@ public function register(Request $request)
     }
 
     public function logout()
-    {
-        try {
-            Auth::logout();
-            return response()->json(
-                [
-                    'status' => 'success',
-                    'message' => 'Successfully logged out'
-                ],
-                200
-            );
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'status'  => 'fail',
-                    'message' => 'Something went wrong: ' . $e->getMessage()
-                ],
-                500
-            );
-        }
+{
+    try {
+        Auth::logout();
+
+        // Clear token cookie here!
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Successfully logged out'
+        ])->withCookie(cookie()->forget('token')); // <-- this line clears cookie named 'token'
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => 'fail',
+            'message' => 'Something went wrong: ' . $e->getMessage()
+        ], 500);
     }
+}
+
 
     // Helper function to respond with a token
     protected function respondWithToken($token)

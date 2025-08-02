@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreQuestionRequest;
 use App\Http\Requests\UpdateQuestionRequest;
 use App\Http\Resources\QuestionResource;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
@@ -56,7 +57,12 @@ class QuestionController extends Controller
             // Handle image upload if format is image
             $imagePath = null;
             if (($data['format'] ?? null) === 'image' && $request->hasFile('question_image')) {
-                $imagePath = $request->file('question_image')->store('questions', 'public');
+                // $imagePath = $request->file('question_image')->store('questions', 'public');
+                $imagePath = Cloudinary::upload($request->file('question_image')->getRealPath(),[
+
+                    'folder' => 'mock-exam/questions',
+                    'resource_type' => 'auto',
+                ])->getSecurePath();
             }
             // Create question
             $question = Question::create([

@@ -18,8 +18,7 @@ class Exam extends Model
         'description',
         'duration',
         'total_questions',
-        'passing_score',
-        'is_active'
+        'is_active',
     ];
 
     public function subject(){

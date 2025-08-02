@@ -22,12 +22,12 @@ class StoreExamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:exams,name',
             'subject_id'=> 'required|exists:subjects,id',
             'description'=> 'nullable|string',
             'duration' => 'required|integer|min:1',
             'total_questions' => 'sometimes|required|integer|min:1',
-            'passing_score' => ' required|integer|min:1',
+            // 'passing_score' => ' required|integer|min:1',
             'is_active' => 'boolean'
         ];
     }

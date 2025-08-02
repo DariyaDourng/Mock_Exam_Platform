@@ -334,7 +334,8 @@ class UserController extends Controller
         // Assuming 'role' is a column in the 'users' table
        $studentinfo = User::whereHas('role', function ($query) {
         $query->where('name', 'student');  // Assuming 'name' column in 'roles' table holds 'student'
-    })->select('name', 'email')
+    })->select('name', 'email', 'gender', 'is_active', 'school_id' )
+        ->with('school:id,name')
         ->get();
 
     return response()->json([
@@ -344,5 +345,35 @@ class UserController extends Controller
     ]);
     }
 
+public function getStudentById($id)
+{
+    try {
+        $student = User::whereHas('role', function ($query) {
+                $query->where('name', 'student');
+            })
+            ->select('id', 'name', 'email', 'gender', 'school_id', 'is_active', 'role_id')
+            ->with(['role:id,name', 'school:id,name'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'status'  => 'success',
+            'data'    => $student,
+            'message' => 'Student fetched successfully'
+        ], Response::HTTP_OK);
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'status'  => 'fail',
+            'message' => 'Student not found'
+        ], Response::HTTP_NOT_FOUND);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => 'fail',
+            'message' => 'Something went wrong: ' . $e->getMessage()
+        ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+}
+
 
 }
+

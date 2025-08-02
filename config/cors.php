@@ -13,7 +13,7 @@ return [
 
     'allowed_headers' => ['*'],
     
-    'allowed_headers' => ['Content-Type', 'X-CSRF-TOKEN'],
+    // 'allowed_headers' => ['Content-Type', 'X-CSRF-TOKEN'],
 
     'exposed_headers' => [],
 

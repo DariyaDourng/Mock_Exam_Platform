@@ -43,7 +43,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
      */
     public function getJWTCustomClaims()
     {
-        return [];
+        return [ 'role_id' => $this->role_id];
     }
 
     public function role()
@@ -75,7 +75,8 @@ public function sendEmailVerificationNotification()
 
 
 public function school(){
-    $this->belongsTo(School::class);
+  return  $this->belongsTo(School::class, 'school_id');
+  
 }
 
 public function examAttempts()

@@ -113,7 +113,7 @@ Route::put('exams/{exam}', [ExamController::class, 'update']);
 Route::delete('exams/{exam}', [ExamController::class, 'destroy']);
 
 // Question Routes
- Route::apiResource('questions', QuestionController::class);
+Route::apiResource('questions', QuestionController::class);
 
 // Route::get('/questions', [QuestionController::class, 'show']);
 
@@ -146,9 +146,7 @@ Route::apiResource('schools', SchoolController::class);
 // // Add a POST route to save answers separately (optional)
 // Route::post('exam-attempts/{examAttempt}/answers', [ExamAttemptController::class, 'saveAnswers']);
 
-Route::middleware('auth:api')->group(function () {
-    
-});
+Route::middleware('auth:api')->group(function () {});
 Route::apiResource('exam-attempts', ExamAttemptController::class);
 Route::post('/exam-attempts', [ExamAttemptController::class, 'store']);
 Route::post('exam-attempts/{examAttempt}/answers', [ExamAttemptController::class, 'saveAnswers']);
@@ -185,3 +183,12 @@ Route::get('/student', [UserController::class, 'getStudents']);
 Route::post('/questions', [QuestionController::class, 'store']);
 
 Route::get('subjects/{subject}/student-and-exam-count', [SubjectController::class, 'getStudentAndExamCount']);
+
+
+Route::get('/users/students', [UserController::class, 'getStudents']);
+Route::get('/users/students/{id}', [UserController::class, 'getStudentById']);
+
+
+
+Route::middleware('auth:api')->get('/student/exam-attempts', [ExamAttemptController::class, 'getStudentExamAttempts']);
+

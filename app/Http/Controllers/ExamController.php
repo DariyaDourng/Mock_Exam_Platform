@@ -44,12 +44,12 @@ class ExamController extends Controller
 
             // Create the exam
             $exam = Exam::create([
-                'name' => $validated['required|string|max:255|unique:exams,name'],
+               'name' => $validated['name'],
                 'subject_id' => $validated['subject_id'],
                 'description' => $validated['description'] ?? null,
                 'duration' => $validated['duration'] ?? null,
                 'total_questions' => $validated['total_questions'],
-                'passing_score' => $validated['passing_score'],
+                // 'passing_score' => $validated['passing_score'],
                 'is_active' => $validated['is_active'] ?? 1,
             ]);
 

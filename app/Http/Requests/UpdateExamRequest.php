@@ -27,7 +27,7 @@ class UpdateExamRequest extends FormRequest
             'description' => 'nullable|string',
             'duration' => 'sometimes|required|integer|min:1',
             'total_questions' => 'sometimes|required|integer|min:1',
-            'passing_score' => 'sometimes|required|integer|min:0|max:100',
+            // 'passing_score' => 'sometimes|required|integer|min:0|max:100',
             'is_active' => 'sometimes|boolean'
         ];
         

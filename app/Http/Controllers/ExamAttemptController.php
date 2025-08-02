@@ -321,4 +321,25 @@ class ExamAttemptController extends Controller
             ]);
         }
     }
+    // Get exam attempts for a specific student
+public function getStudentExamAttempts(Request $request)
+{
+    $userId = $request->user()->id; // If using auth
+    // $userId = $request->query('user_id'); // If passed manually
+
+    try {
+        $attempts = ExamAttempt::with(['exam'])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($attempts, 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to fetch student exam attempts',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
 }
