@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import axios from "axios"
+import Cookies from "js-cookie"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
@@ -65,8 +66,11 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
     async function fetchResult() {
       setLoading(true)
       try {
+        const token = Cookies.get('jwt_token');
         const res = await axios.get(`http://localhost:8000/api/exam-attempts/${examAttemptId}`, {
-          withCredentials: true,
+          headers:{
+            Authorization: `Bearer ${token}`,
+          }
         })
         setResult(res.data.data ?? res.data)
       } catch (error) {
@@ -95,7 +99,7 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
 
   const formatDuration = (min?: number, sec?: number): string => {
     if ((min ?? 0) === 0 && (sec ?? 0) < 5) return "few seconds"
-    return `${min ?? 0}m ${sec ?? 0}s`
+    return `${min ?? 0}mn ${sec ?? 0}s`
   }
 
   if (loading) {
@@ -135,8 +139,10 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
   const totalPoints = Array.isArray(result.answers)
     ? result.answers.reduce((sum, ans) => sum + Number(ans.points ?? 0), 0)
     : 0
+
+  // Pass if percentage is 50% or more
   const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0
-  const isPass = result.status === "passed" || result.status === "graded"
+  const isPass = percentage >= 50
 
   return (
     <div className="container mx-auto p-2 sm:p-6 space-y-6 max-w-7xl">
@@ -144,17 +150,18 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
         <div className="flex items-center space-x-3 w-full sm:w-auto">
           <Button variant="ghost" onClick={() => router.back()} className="text-gray-600">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
+            <ArrowLeft className="h-4 w-4 mr-1 font-bold text-lg" />
+            <span className="text-lg">Back</span>
           </Button>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">{examTitle}</h1>
-          </div>
+          
         </div>
       </div>
 
       {/* Main Content Container */}
-      <div className="bg-gray-50 rounded-lg p-4 sm:p-6 space-y-6">
+      <div className="bg-gray-50 rounded-lg px-2 py-4 sm:p-6 space-y-6">
+        <div>
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">Exam Name: {examTitle}</h1>
+          </div>
         {/* Score Card */}
         <Card className={`border-2 ${isPass ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}>
           <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">

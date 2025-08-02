@@ -21,7 +21,7 @@ export default function AdminSidebarPage() {
   const menuItems = [
     { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
     { name: 'Available Exam', icon: ClipboardDocumentCheckIcon, path: '/dashboard/tests' },
-    { name: 'Your Result', icon: ClipboardDocumentCheckIcon, path: '/dashboard/scores' },
+    // { name: 'Your Result', icon: ClipboardDocumentCheckIcon, path: '/dashboard/scores' },
     { name: 'Leaderboard', icon: ChartBarIcon, path: '/dashboard/leaderboard' },
   ];
 

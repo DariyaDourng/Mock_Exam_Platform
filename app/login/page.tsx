@@ -2,10 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import Cookies from 'js-cookie';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+
 
 const Login: React.FC = () => {
   const searchParams = useSearchParams();
@@ -50,16 +52,27 @@ const Login: React.FC = () => {
         {
           email: form.email,
           password: form.password,
-        },
-        {
-          withCredentials: true,
         }
       );
 
-      toast.success('Login Successful!');
-      setTimeout(() => {
-        router.push('/admin/dashboard');
-      }, 1000);
+      const data = response.data;
+
+      if (data.token && data.user) {
+        // Save token to localStorage
+        Cookies.set('jwt_token', data.token);
+        toast.success('Login Successful!');
+
+        // Redirect based on role_id
+        if (data.user.role_id === 1) {
+          router.push('/admin/dashboard');
+        } else if (data.user.role_id === 2) {
+          router.push('/dashboard');
+        } else {
+          toast.error('Unknown user role.');
+        }
+      } else {
+        toast.error('Login failed: Invalid response from server.');
+      }
     } catch (error: any) {
       if (error.response?.status === 401) {
         toast.error('Invalid email or password.');

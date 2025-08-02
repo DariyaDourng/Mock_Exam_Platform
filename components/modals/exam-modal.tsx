@@ -203,7 +203,7 @@ export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: Exam
                 required
               />
             </div>
-
+{/* 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="passingScore" className="text-right">
                 Passing Score (%)
@@ -218,7 +218,7 @@ export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: Exam
                 className="col-span-3"
                 required
               />
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="isActive" className="text-right">

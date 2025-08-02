@@ -104,10 +104,10 @@ export default function NewTestPage() {
                       <Input id="duration" type="number" min="1" defaultValue="30" required />
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="passing-score">Passing Score (%)</Label>
                       <Input id="passing-score" type="number" min="1" max="100" defaultValue="70" required />
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="flex items-center space-x-2">

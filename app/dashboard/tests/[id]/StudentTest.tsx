@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import Cookies from "js-cookie";
 import dayjs from "dayjs"; // Import dayjs for formatting
 import {
   Card,
@@ -215,8 +216,12 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
   async function fetchUserId(): Promise<number | null> {
     try {
+      const token = Cookies.get('jwt_token');
       const res = await axios.get("http://localhost:8000/api/user", {
-        withCredentials: true,
+        // withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       return res.data.id || null;
     } catch (error) {
@@ -257,7 +262,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
       const createRes = await axios.post(
         "http://localhost:8000/api/exam-attempts",
         { ...payload, status: "submitted" },
-        { withCredentials: true }
+        // { withCredentials: true }
       );
 
       const attemptId = createRes.data.data.id;
@@ -266,7 +271,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
       const gradeRes = await axios.post(
         `http://localhost:8000/api/exam-attempts/${attemptId}/grade`,
         {},
-        { withCredentials: true }
+        // { withCredentials: true }
       );
 
       const score = gradeRes.data.data.attempt.score ?? 0;

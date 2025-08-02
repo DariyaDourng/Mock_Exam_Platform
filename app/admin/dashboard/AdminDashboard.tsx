@@ -74,7 +74,7 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Welcome back, Admin! Here's an overview of your platform.</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Select value={timeRange} onValueChange={setTimeRange}>
+          {/* <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select time range" />
             </SelectTrigger>
@@ -84,13 +84,13 @@ export default function AdminDashboard() {
               <SelectItem value="quarter">Last 90 days</SelectItem>
               <SelectItem value="year">Last year</SelectItem>
             </SelectContent>
-          </Select>
-          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" asChild>
+          </Select> */}
+          {/* <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" asChild>
             <Link href="/admin/reports">
               <BarChart3 className="mr-2 h-4 w-4" />
               Reports
             </Link>
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -152,9 +152,9 @@ export default function AdminDashboard() {
 
       {/* Chart for enrollments */}
       <Card>
-        <CardHeader>
-          <CardTitle>Student Enrollments</CardTitle>
-        </CardHeader>
+        {/* <CardHeader> */}
+          {/* <CardTitle>Student Enrollments</CardTitle> */}
+        {/* </CardHeader> */}
         {/* <CardContent>
           <ChartContainer>
             <Line data={enrollmentChartData} />

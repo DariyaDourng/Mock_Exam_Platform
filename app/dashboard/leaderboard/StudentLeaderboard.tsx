@@ -55,17 +55,28 @@ export default function StudentLeaderboard() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
+   return date.toLocaleString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  // hour: "numeric",
+  // minute: "2-digit",
+  // hour12: true,
+})
+
   }
 
-  const formatDuration = (duration: string) => {
-    const [min, sec] = duration.split(":")
-    return `${parseInt(min)}mn ${parseInt(sec)}s`
-  }
+ const formatDuration = (duration: string) => {
+  const [minStr, secStr] = duration.split(":")
+  const min = parseInt(minStr)
+  const sec = parseInt(secStr)
+
+  const safeMin = isNaN(min) || min < 0 ? 0 : min
+  const safeSec = isNaN(sec) || sec < 0 ? 0 : sec
+
+  return `${safeMin}mn ${safeSec}s`
+}
+
 
   const renderLeaderboardItem = (student: any, index: number) => {
     const rankNumber = index + 1
@@ -95,7 +106,7 @@ export default function StudentLeaderboard() {
 
         <div className="col-span-2 text-right">
           {/* Display the highest_score on a 100-point scale, conditionally formatted */}
-          <div>{displayScore}%</div>  {/* Display score with or without decimals */}
+          <div>{displayScore}</div>  {/* Display score with or without decimals */}
         </div>
 
         <div className="col-span-2 text-center">
@@ -122,17 +133,17 @@ export default function StudentLeaderboard() {
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className={`grid grid-cols-${subjects.length || 1} w-full`}>
-          {subjects.map(subject => (
-            <TabsTrigger
-              key={subject.subject_id}
-              value={subject.subject_id.toString()}
-              className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 font-medium"
-            >
-              {subject.subject_name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <TabsList className="flex gap-2 px-20 justify-around">
+  {subjects.map(subject => (
+    <TabsTrigger
+      key={subject.subject_id}
+      value={subject.subject_id.toString()}
+      className="data-[state=active]:bg-white data-[state=active]:text-black font-medium px-20 "
+    >
+      {subject.subject_name}
+    </TabsTrigger>
+  ))}
+</TabsList>
 
         {subjects.map(subject => (
           <TabsContent value={subject.subject_id.toString()} key={subject.subject_id} className="mt-6">
@@ -151,7 +162,7 @@ export default function StudentLeaderboard() {
                     <div className="grid grid-cols-12 bg-gray-50 p-4 border-b">
                       <div className="col-span-1 text-center text-sm font-medium text-gray-500">Rank</div>
                       <div className="col-span-3 text-sm font-medium text-gray-500">Student Name</div>
-                      <div className="col-span-2 text-right text-sm font-medium text-gray-500">Score</div>
+                      <div className="col-span-2 text-right text-sm font-medium text-gray-500">Score(%)</div>
                       <div className="col-span-2 text-center text-sm font-medium text-gray-500">Attempts</div>
                       <div className="col-span-2 text-center text-sm font-medium text-gray-500">Duration</div>
                       <div className="col-span-2 text-center text-sm font-medium text-gray-500">Test Date</div>

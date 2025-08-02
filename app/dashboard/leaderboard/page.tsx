@@ -4,10 +4,6 @@ import StudentSidebar from '@/components/sidebar/student-sidebar';
 import Header from '@/components/header/Header';
 import StudentLeaderboard from './StudentLeaderboard';
 
-
-
-
-
 function StudentLeaderboardPage() {
   return (
   <div className="flex flex-col h-screen">
