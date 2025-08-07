@@ -209,7 +209,7 @@ const TestCards: React.FC = () => {
 
   const fetchSubjects = async () => {
     try {
-      const response = await axios.get(API_URL+'api/subjects')
+      const response = await axios.get(API_URL+'/api/subjects')
       const data = response.data.data || []
       setSubjects(data)
     } catch (error) {
