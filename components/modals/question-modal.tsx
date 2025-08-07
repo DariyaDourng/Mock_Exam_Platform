@@ -20,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Minus, Upload, X, ImageIcon, Type } from "lucide-react"
+import { API_URL } from "@/config"
 
 interface Option {
   id: number
@@ -51,7 +52,7 @@ export function QuestionModal({ isOpen, onClose, onSave, question, mode }: Quest
   useEffect(() => {
     async function fetchSubjects() {
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/subjects")
+        const res = await axios.get(API_URL+"/api/subjects")
         setSubjects(res.data.data || [])
       } catch {
         toast.error("Unable to fetch course list.")
@@ -234,20 +235,20 @@ export function QuestionModal({ isOpen, onClose, onSave, question, mode }: Quest
         formDataToSend.append("choices", JSON.stringify(payload.choices))
 
         if (mode === "add") {
-          await axios.post("http://127.0.0.1:8000/api/questions", formDataToSend, {
+          await axios.post(API_URL+"/api/questions", formDataToSend, {
             headers: { "Content-Type": "multipart/form-data" },
           })
         } else if (mode === "edit" && question?.id) {
-          await axios.post(`http://127.0.0.1:8000/api/questions/${question.id}`, formDataToSend, {
+          await axios.post(API_URL+`/api/questions/${question.id}`, formDataToSend, {
             headers: { "Content-Type": "multipart/form-data" },
             params: { _method: "PUT" },
           })
         }
       } else {
         if (mode === "add") {
-          await axios.post("http://127.0.0.1:8000/api/questions", payload)
+          await axios.post(API_URL+"/api/questions", payload)
         } else if (mode === "edit" && question?.id) {
-          await axios.put(`http://127.0.0.1:8000/api/questions/${question.id}`, payload)
+          await axios.put(API_URL+`/api/questions/${question.id}`, payload)
         }
       }
       toast.success(mode === "add" ? "Question added successfully" : "Question updated successfully")

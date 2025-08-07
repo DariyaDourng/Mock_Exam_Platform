@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { API_URL } from "@/config"
 
 interface DeleteQuestionModalProps {
   isOpen: boolean
@@ -26,7 +27,7 @@ export function DeleteQuestionModal({ isOpen, onClose, questionId, onDeleted }: 
     setIsDeleting(true)
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/questions/${questionId}`, {
+      const response = await fetch(API_URL+`/api/questions/${questionId}`, {
         method: "DELETE",
         headers: {
           "Accept": "application/json",

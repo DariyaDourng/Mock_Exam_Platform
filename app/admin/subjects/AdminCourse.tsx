@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { DeleteCourseModal } from '@/components/modals/delete-course-modal';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 export default function AdminCoursesPage() {
   const router = useRouter();
@@ -28,14 +29,14 @@ export default function AdminCoursesPage() {
   // Fetch subjects with students count and exam count
   const fetchSubjects = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/subjects');
+      const response = await axios.get(API_URL+'/api/subjects');
       const subjects = response.data.data || [];
 
       // Fetching student count and exam count for each subject
       const updatedSubjects = await Promise.all(
         subjects.map(async (subject: any) => {
           const studentCountResponse = await axios.get(
-            `http://localhost:8000/api/subjects/${subject.id}/student-and-exam-count`
+            API_URL+`/api/subjects/${subject.id}/student-and-exam-count`
           );
 
           const { student_count, exam_count } = studentCountResponse.data.data || { student_count: 0, exam_count: 0 };
@@ -63,7 +64,7 @@ export default function AdminCoursesPage() {
   const handleDeleteCourse = async () => {
     if (!selectedCourseId) return;
     try {
-      await axios.delete(`http://localhost:8000/api/subjects/${selectedCourseId}`);
+      await axios.delete(API_URL+`/api/subjects/${selectedCourseId}`);
       toast.success('Course successfully deleted');
       setIsModalOpen(false);
       fetchSubjects();
@@ -87,7 +88,7 @@ export default function AdminCoursesPage() {
         formData.append('subject_image', courseData.image);
       }
 
-      await axios.post('http://localhost:8000/api/subjects', formData, {
+      await axios.post(API_URL+'/api/subjects', formData, {
         headers: { Accept: 'application/json' },
       });
 
@@ -111,7 +112,7 @@ export default function AdminCoursesPage() {
         formData.append('subject_image', courseData.image);
       }
 
-      await axios.post(`http://localhost:8000/api/subjects/${courseData.id}`, formData, {
+      await axios.post(API_URL+`/api/subjects/${courseData.id}`, formData, {
         headers: { Accept: 'application/json' },
       });
 
