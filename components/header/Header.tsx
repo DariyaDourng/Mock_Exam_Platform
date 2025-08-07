@@ -15,6 +15,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import Modal from '../ui/modal';
 import AdminProfile from '@/app/admin/profile/page';
+import { API_URL } from '@/config';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -30,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     async function fetchUser() {
       try {
         const token = Cookies.get('jwt_token');
-        const res = await axios.get('http://localhost:8000/api/profile', {
+        const res = await axios.get(API_URL+'/api/profile', {
            headers: {
           Authorization: `Bearer ${token}`,
   },
@@ -60,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     try {
 
       const token = Cookies.get('jwt_token');
-      await axios.post('http://localhost:8000/api/logout', {}, {
+      await axios.post(API_URL+'/api/logout', {}, {
           headers: {
           Authorization: `Bearer ${token}`,
   },

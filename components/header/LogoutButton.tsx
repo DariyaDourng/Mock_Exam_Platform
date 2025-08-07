@@ -4,13 +4,14 @@ import React from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { API_URL } from '@/config';
 
 const LogoutButton: React.FC = () => {
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:8000/api/logout', {}, {
+      await axios.post(API_URL+'/api/logout', {}, {
         // withCredentials: true, // important to send cookies
       });
 

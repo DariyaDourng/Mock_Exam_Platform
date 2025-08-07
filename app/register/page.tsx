@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/config';
 
 const RegisterPage: React.FC = () => {
   const [form, setForm] = useState({
@@ -47,7 +48,7 @@ const RegisterPage: React.FC = () => {
       return;
     }
     try {
-      const res = await axios.post('http://localhost:8000/api/check-email', { email });
+      const res = await axios.post(API_URL+'/api/check-email', { email });
       setErrors((prev) => ({
         ...prev,
         email: res.data.exists ? 'This email already exists!' : '',
@@ -100,7 +101,7 @@ const RegisterPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await axios.post('http://localhost:8000/api/register', {
+      const res = await axios.post(API_URL+'/api/register', {
         name: form.name,
         email: form.email,
         password: form.password,
@@ -127,7 +128,7 @@ const RegisterPage: React.FC = () => {
   };
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/schools')
+    axios.get(API_URL+'/api/schools')
       .then(res => {
         const schoolsData = Array.isArray(res.data) ? res.data : res.data.data;
         const sorted = [...schoolsData].sort((a, b) => a.name.localeCompare(b.name));

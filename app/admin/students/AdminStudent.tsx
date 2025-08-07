@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { API_URL } from '@/config';
 
 interface Student {
   id: number;
@@ -51,7 +52,7 @@ export default function AdminStudentsPage() {
   useEffect(() => {
     async function fetchStudents() {
       try {
-        const res = await axios.get('http://localhost:8000/api/users/students');
+        const res = await axios.get(API_URL+'/api/users/students');
         setStudents(res.data.data || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch students');

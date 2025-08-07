@@ -10,6 +10,7 @@ import { Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Eye, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/config';
 
 interface Question {
   id: number;
@@ -37,7 +38,7 @@ export default function AddQuestionsToExam({ examId }: { examId: number }) {
     async function fetchQuestions() {
       setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:8000/api/exams/${examId}/questions`);
+        const res = await axios.get(API_URL+`/api/exams/${examId}/questions`);
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
         setQuestions(data); // Set questions related to the specific exam
       } catch (error) {
@@ -61,7 +62,7 @@ export default function AddQuestionsToExam({ examId }: { examId: number }) {
   const renderQuestionImage = (imageUrl: string | null) => {
     if (!imageUrl) return null;
 
-    const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:8000/storage/${imageUrl}`;
+    const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : API_URL+`/storage/${imageUrl}`;
     return <img src={fullImageUrl} alt="Question Image" className="max-h-16 rounded" />;
   };
 

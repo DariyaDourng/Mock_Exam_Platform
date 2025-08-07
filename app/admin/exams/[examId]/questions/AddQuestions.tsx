@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { API_URL } from '@/config';
 
 interface Question {
   id: number;
@@ -31,7 +32,7 @@ export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) 
       setLoading(true);
       try {
         // Fetch questions specifically for this exam by using the examId in the URL
-        const res = await axios.get(`http://localhost:8000/api/exams/${examId}/questions`);
+        const res = await axios.get(API_URL+`/api/exams/${examId}/questions`);
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
         setQuestions(data);
       } catch (error) {
@@ -79,7 +80,7 @@ export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) 
                           src={
                             q.question_image && q.question_image.startsWith('http')
                               ? q.question_image
-                              : `http://localhost:8000${q.question_image}`
+                              : API_URL+`${q.question_image}`
                           }
                           alt={`Question ${i + 1} Image`}
                           className="max-h-24 max-w-full object-contain"

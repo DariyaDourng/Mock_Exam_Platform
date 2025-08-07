@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { BarChart3, Clock, BookOpen, TrendingUp, TrendingDown, Users } from "lucide-react"
 import axios from "axios"
+import { API_URL } from "@/config"
 
 export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState("month")
@@ -26,11 +27,11 @@ export default function AdminDashboard() {
 
     try {
       const [coursesRes, examsRes, studentsRes, scoresRes, enrollmentsRes] = await Promise.all([
-        axios.get("http://localhost:8000/api/totalsubjects"),
-        axios.get("http://localhost:8000/api/countExams"), // Fixed this route
-        axios.get("http://localhost:8000/api/students"),
-        axios.get("http://localhost:8000/api/average-scores"),
-        axios.get("http://localhost:8000/api/enrollments")
+        axios.get(API_URL+"/api/totalsubjects"),
+        axios.get(API_URL+"/api/countExams"), // Fixed this route
+        axios.get(API_URL+"/api/students"),
+        axios.get(API_URL+"/api/average-scores"),
+        axios.get(API_URL+"/api/enrollments")
       ])
 
       setTotalCourses(coursesRes.data.data)

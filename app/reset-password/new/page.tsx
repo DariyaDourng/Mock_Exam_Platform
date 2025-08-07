@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import { API_URL } from '@/config'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -41,7 +42,7 @@ export default function ResetPasswordPage() {
 
     try {
       // Call the backend API to reset the password
-      const response = await fetch(`http://localhost:8000/api/resetpassword`, {
+      const response = await fetch(API_URL+`/api/resetpassword`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

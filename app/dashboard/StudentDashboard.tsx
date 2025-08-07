@@ -34,6 +34,7 @@ import {
 
 // Import axios for making HTTP requests
 import axios from "axios"
+import { API_URL } from "@/config"
 
 // Interface for the raw data received from the backend API for exam attempts
 // This mirrors the structure of the data returned by your Laravel backend for exam attempts
@@ -114,7 +115,7 @@ export default function StudentHistoryPage() {
 
         // 1. Fetch subjects first to create a lookup map (ID to Name)
         // This is crucial to convert subject_id from exam data into readable subject names
-        const subjectsRes = await axios.get("http://localhost:8000/api/subjects", {
+        const subjectsRes = await axios.get(API_URL+"/api/subjects", {
           headers: { Authorization: `Bearer ${Cookies.get("jwt_token")}` }, // Include JWT token for API authentication
         });
         // Assuming your API returns subject data in `response.data.data`
@@ -127,7 +128,7 @@ export default function StudentHistoryPage() {
         setAllSubjectsMap(subjectsMap); // Store the generated map in state
 
         // 2. Then fetch the student's exam history
-        const examRes = await axios.get("http://localhost:8000/api/student/exam-attempts", {
+        const examRes = await axios.get(API_URL+"/api/student/exam-attempts", {
           headers: { Authorization: `Bearer ${Cookies.get("jwt_token")}` }, // Include JWT token for API authentication
         })
         const rawData: RawExamData[] = examRes.data // Raw exam attempt data from the API response

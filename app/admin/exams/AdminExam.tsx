@@ -20,6 +20,7 @@ import { DeleteExamModal } from "@/components/modals/delete-exam-modal"
 import toast from 'react-hot-toast'
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { API_URL } from "@/config"
 
 export default function AdminExamsPage() {
   const router = useRouter()
@@ -35,7 +36,7 @@ export default function AdminExamsPage() {
   // Fetch exams from API
   const fetchExams = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/exams")
+      const response = await axios.get(API_URL+"/api/exams")
       setExams(response.data.data || [])
     } catch (error) {
       console.error("Error fetching exams:", error)
@@ -46,7 +47,7 @@ export default function AdminExamsPage() {
   // Fetch courses (subjects) from API
   const fetchCourses = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/subjects")
+      const response = await axios.get(API_URL+"/api/subjects")
       setCourses(response.data.data || [])
     } catch (error) {
       console.error("Error fetching courses:", error)
@@ -71,7 +72,7 @@ export default function AdminExamsPage() {
 
   const handleAddExam = async (examData: any) => {
     try {
-      await axios.post("http://localhost:8000/api/exams", {
+      await axios.post(API_URL+"/api/exams", {
         name: examData.name,
         subject_id: examData.course,
         description: examData.description,
@@ -92,7 +93,7 @@ export default function AdminExamsPage() {
 
   const handleEditExam = async (examData: any) => {
     try {
-      await axios.put(`http://localhost:8000/api/exams/${examData.id}`, {
+      await axios.put(API_URL+`/api/exams/${examData.id}`, {
         name: examData.name,
         subject_id: examData.course,
         description: examData.description,
@@ -113,7 +114,7 @@ export default function AdminExamsPage() {
   const handleDeleteExam = async () => {
     if (!selectedExamId) return
     try {
-      await axios.delete(`http://localhost:8000/api/exams/${selectedExamId}`)
+      await axios.delete(API_URL+`/api/exams/${selectedExamId}`)
       toast.success("Exam successfully deleted.")
       setIsDeleteModalOpen(false)
       setSelectedExamId(null)

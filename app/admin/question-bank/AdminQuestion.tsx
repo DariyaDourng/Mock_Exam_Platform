@@ -34,6 +34,7 @@ import { DeleteQuestionModal } from "@/components/modals/delete-question-modal";
 import { UpdateQuestionModal } from "@/components/modals/UpdateQuestionModal";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/config";
 
 export default function QuestionBankPage() {
   const router = useRouter();
@@ -65,7 +66,7 @@ export default function QuestionBankPage() {
   const fetchQuestions = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get("http://localhost:8000/api/questions");
+      const res = await axios.get(API_URL+"/api/questions");
       const data = res.data;
 
       const questionsArray = Array.isArray(data)

@@ -6,6 +6,7 @@ import axios from "axios"
 import { ChevronLeft, CheckCircle, Info, ClipboardList, Star, Calendar, MessageCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { API_URL } from "@/config"
 
 interface Choice {
   id: number
@@ -42,7 +43,7 @@ export default function AdminQuestionPreviewPage() {
       setError(null)
       try {
         const response = await axios.get<{ data: Question & { choices: any[] } }>(
-          `http://localhost:8000/api/questions/${params.id}`,
+          API_URL+`/api/questions/${params.id}`,
         )
         const q = response.data.data
 

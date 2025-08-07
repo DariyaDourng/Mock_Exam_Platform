@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation'; // to get the dynamic id param
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 interface Student {
   id: number;
@@ -27,7 +28,7 @@ export default function StudentProfilePage() {
 
     async function fetchStudent() {
       try {
-        const res = await axios.get(`http://localhost:8000/api/users/students/${id}`);
+        const res = await axios.get(API_URL+`/api/users/students/${id}`);
         if (res.data.status === 'success') {
           setStudent(res.data.data);
         } else {

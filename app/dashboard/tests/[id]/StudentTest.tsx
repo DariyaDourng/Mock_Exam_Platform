@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/config";
 
 interface Choice {
   id: number;
@@ -78,7 +79,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
     setError(null);
 
     axios
-      .get<{ data: TestData }>(`http://localhost:8000/api/exams/${testId}`)
+      .get<{ data: TestData }>(API_URL+`/api/exams/${testId}`)
       .then((res) => {
         setTestData(res.data.data);
         setTestSubmitted(false);
@@ -217,7 +218,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
   async function fetchUserId(): Promise<number | null> {
     try {
       const token = Cookies.get('jwt_token');
-      const res = await axios.get("http://localhost:8000/api/user", {
+      const res = await axios.get(API_URL+"/api/user", {
         // withCredentials: true,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -260,7 +261,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
     try {
       // Step 1: Create exam attempt
       const createRes = await axios.post(
-        "http://localhost:8000/api/exam-attempts",
+        API_URL+"/api/exam-attempts",
         { ...payload, status: "submitted" },
         // { withCredentials: true }
       );
@@ -269,7 +270,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
       // Step 2: Grade the exam attempt
       const gradeRes = await axios.post(
-        `http://localhost:8000/api/exam-attempts/${attemptId}/grade`,
+        API_URL+`/api/exam-attempts/${attemptId}/grade`,
         {},
         // { withCredentials: true }
       );

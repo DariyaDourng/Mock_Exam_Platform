@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react"
 import axios from "axios"
 import { toast } from "react-hot-toast"
 import { QuestionModal } from "./question-modal"
+import { API_URL } from "@/config"
 
 interface UpdateQuestionModalProps {
   isOpen: boolean
@@ -36,7 +37,7 @@ export function UpdateQuestionModal({
       setLoading(true)
       try {
         console.log("Fetching question ID:", questionId)
-        const res = await axios.get(`http://localhost:8000/api/questions/${questionId}`)
+        const res = await axios.get(API_URL+`/api/questions/${questionId}`)
         console.log("Question data from API:", res.data.data)
         const data = res.data.data
 

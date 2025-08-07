@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff } from 'lucide-react';
+import { API_URL } from '@/config';
 
 
 const Login: React.FC = () => {
@@ -48,7 +49,7 @@ const Login: React.FC = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/login',
+        API_URL+'/api/login',
         {
           email: form.email,
           password: form.password,

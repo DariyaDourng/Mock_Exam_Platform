@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
+import { API_URL } from "@/config"
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -30,7 +31,7 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/api/sendOTP", {
+      const response = await fetch(API_URL+"/api/sendOTP", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

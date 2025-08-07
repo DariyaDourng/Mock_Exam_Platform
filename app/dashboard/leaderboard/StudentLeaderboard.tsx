@@ -26,6 +26,7 @@ import {
   Timer,
   Calendar,
 } from "lucide-react"
+import { API_URL } from "@/config"
 
 export default function StudentLeaderboard() {
   const [subjects, setSubjects] = useState<any[]>([])
@@ -36,7 +37,7 @@ export default function StudentLeaderboard() {
     const fetchLeaderboard = async () => {
       try {
         setLoading(true)
-        const response = await axios.get("http://localhost:8000/api/leaderboard")
+        const response = await axios.get(API_URL+"/api/leaderboard")
         const data = response.data?.data ?? []
         setSubjects(data)
 

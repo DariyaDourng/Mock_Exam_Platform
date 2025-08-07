@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
+import { API_URL } from "@/config"
 
 export default function OTPVerificationPage() {
   const router = useRouter()
@@ -64,7 +65,7 @@ export default function OTPVerificationPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/verifyOTP`, {
+      const response = await fetch(API_URL`/api/verifyOTP`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: otpValue }),
@@ -99,7 +100,7 @@ export default function OTPVerificationPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/newpassword`, {
+      const response = await fetch(API_URL`/api/newpassword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: otp.join(""), new_password: newPassword }),

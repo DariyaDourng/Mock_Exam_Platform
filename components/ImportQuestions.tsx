@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
+import { API_URL } from '@/config';
 
 interface ImportQuestionsProps {
   examId: number;
@@ -26,7 +27,7 @@ export default function ImportQuestions({ examId, onImportSuccess }: ImportQuest
   const fetchQuestionBank = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:8000/api/questions');
+      const res = await axios.get(API_URL+'/api/questions');
       const data = Array.isArray(res.data) ? res.data : res.data.data || [];
       setQuestionBank(data);
     } catch (error) {
@@ -54,7 +55,7 @@ export default function ImportQuestions({ examId, onImportSuccess }: ImportQuest
     }
     setImporting(true);
     try {
-      await axios.post(`http://localhost:8000/api/exams/${examId}/questions`, {
+      await axios.post(API_URL+`/api/exams/${examId}/questions`, {
         question_ids: selectedIds,
       });
       toast.success('Questions imported successfully!');

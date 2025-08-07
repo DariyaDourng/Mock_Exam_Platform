@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Clock, FileText, Star } from "lucide-react"
+import { API_URL } from "@/config"
 
 interface Test {
   id: number
@@ -40,7 +41,7 @@ export default function TestsPage() {
     setLoading(true)
     setError(null)
     axios
-      .get("http://localhost:8000/api/exams") // or /api/tests depending on your backend
+      .get(API_URL+"/api/exams") // or /api/tests depending on your backend
       .then((res) => {
         // Adapt if your backend response is nested, e.g. res.data.data
         setTests(res.data.data || res.data || [])

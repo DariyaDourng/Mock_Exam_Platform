@@ -4,6 +4,7 @@ import Cookies from 'js-cookie';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 interface AdminProfileProps {
   onClose: () => void;
@@ -31,7 +32,7 @@ export default function AdminProfile({ onClose }: AdminProfileProps) {
     async function fetchProfile() {
       try {
            const token = Cookies.get('jwt_token');
-        const res = await axios.get('http://localhost:8000/api/profile', {
+        const res = await axios.get(API_URL+'/api/profile', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -46,7 +47,7 @@ export default function AdminProfile({ onClose }: AdminProfileProps) {
         if (data.school_id) {
           try {
             const token = Cookies.get('jwt_token');
-            const schoolRes = await axios.get(`http://localhost:8000/api/schools/${data.school_id}`, {
+            const schoolRes = await axios.get(API_URL+`/api/schools/${data.school_id}`, {
               headers: {
                 Authorization: `Bearer ${token}`,
               },

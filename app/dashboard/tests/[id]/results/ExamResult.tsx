@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast"
 import dayjs from "dayjs"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
+import { API_URL } from "@/config"
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
@@ -67,7 +68,7 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
       setLoading(true)
       try {
         const token = Cookies.get('jwt_token');
-        const res = await axios.get(`http://localhost:8000/api/exam-attempts/${examAttemptId}`, {
+        const res = await axios.get(API_URL+`/api/exam-attempts/${examAttemptId}`, {
           headers:{
             Authorization: `Bearer ${token}`,
           }

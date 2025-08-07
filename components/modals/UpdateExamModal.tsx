@@ -2,6 +2,7 @@ import axios from "axios"
 import toast from "react-hot-toast"
 import React, { useState, useEffect } from "react"
 import { ExamModal } from "./exam-modal"
+import { API_URL } from "@/config"
 
 export function UpdateExamModal({
   isOpen,
@@ -28,7 +29,7 @@ export function UpdateExamModal({
     async function fetchExam() {
       setLoading(true)
       try {
-        const res = await axios.get(`http://localhost:8000/api/exams/${examId}`)
+        const res = await axios.get(API_URL+`api/exams/${examId}`)
         const data = res.data.data
 
         // Map backend response to the shape expected by ExamModal
@@ -74,7 +75,7 @@ const handleSubmit = async (updatedExam: any) => {
   console.log("Submitting payload:", payload);
 
   try {
-    const res = await axios.put(`http://localhost:8000/api/exams/${examId}`, payload);
+    const res = await axios.put(API_URL+`api/exams/${examId}`, payload);
     console.log("Response from update:", res);
 
     toast.success("Exam updated successfully!");
