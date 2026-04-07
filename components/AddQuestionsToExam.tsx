@@ -23,33 +23,35 @@ interface Question {
   id: number;
   question_text: string | null;
   question_image?: string | null;
-  category_name?: string; // Directly retrieving the category_name
+  category_name?: string;
   type?: string;
   points?: number;
   format?: string;
 }
 
-export default function AddQuestionsToExam({ examId }: { examId: number }) {
+export default function AddQuestionsToExam({ examId, examTitle }: { examId: number; examTitle?: string }) {
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [examName, setExamName] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(
-    null,
-  );
+  const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
 
-  const itemsPerPage = 10; // Customize items per page
+  const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch questions related to the current exam
   useEffect(() => {
     async function fetchQuestions() {
       setLoading(true);
       try {
+        const examRes = await axios.get(API_URL + `/api/exams/${examId}`);
+        const examData = examRes.data.data ?? examRes.data;
+        setExamName(examData?.title || examData?.name || `Exam ${examId}`);
+
         const res = await axios.get(API_URL + `/api/exams/${examId}/questions`);
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setQuestions(data); // Set questions related to the specific exam
+        setQuestions(data);
       } catch (error) {
         toast.error("Failed to load questions");
         setQuestions([]);
@@ -61,14 +63,12 @@ export default function AddQuestionsToExam({ examId }: { examId: number }) {
     fetchQuestions();
   }, [examId]);
 
-  // Filter questions based on search query
   const filteredQuestions = questions.filter((question) => {
     const searchableText =
       typeof question.question_text === "string" ? question.question_text : "";
     return searchableText.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  // Helper function to render question image
   const renderQuestionImage = (imageUrl: string | null) => {
     if (!imageUrl) return null;
 
@@ -84,13 +84,11 @@ export default function AddQuestionsToExam({ examId }: { examId: number }) {
     );
   };
 
-  // Handle Preview button click
   const handlePreviewClick = (q: Question) => {
     if (!q || !q.id) return;
-    router.push(`/admin/question-bank/${q.id}`); // Using 'q' here to access the question data
+    router.push(`/admin/question-bank/${q.id}`);
   };
 
-  // Pagination calculation
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
@@ -102,7 +100,7 @@ export default function AddQuestionsToExam({ examId }: { examId: number }) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl">
-              Questions for Exam #{examId}
+              Questions <input type="button" value="" />: {examName}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Input
@@ -157,17 +155,15 @@ export default function AddQuestionsToExam({ examId }: { examId: number }) {
                         </span>
                       )}
                     </TableCell>
-                    {/* Directly use category_name */}
                     <TableCell>{q.category_name || "No category"}</TableCell>
                     <TableCell>{q.type}</TableCell>
                     <TableCell>{q.points || 1}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {/* Preview Button */}
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handlePreviewClick(q)} // Pass the correct question object
+                          onClick={() => handlePreviewClick(q)}
                           aria-label="Preview"
                         >
                           <Eye className="h-4 w-4 text-indigo-600" />
@@ -180,7 +176,6 @@ export default function AddQuestionsToExam({ examId }: { examId: number }) {
             </Table>
           )}
 
-          {/* Pagination Controls */}
           <div className="flex justify-center items-center gap-4 mt-4">
             <Button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}

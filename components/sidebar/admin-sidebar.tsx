@@ -37,11 +37,11 @@ const menuItems = [
 ];
 
 interface AdminSidebarProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
+  sidebarOpen?: boolean;
+  setSidebarOpen?: (open: boolean) => void;
 }
-
-export default function AdminSidebarPage({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) {
+export default function AdminSidebarPage({   sidebarOpen = false, 
+  setSidebarOpen = () => {}  }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);

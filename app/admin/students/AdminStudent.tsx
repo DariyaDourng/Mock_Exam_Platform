@@ -104,11 +104,11 @@ export default function AdminStudentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead>School</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className='font-bold text-black'>Name</TableHead>
+                <TableHead className='font-bold text-black'>Email</TableHead>
+                <TableHead className='font-bold text-black'>Gender</TableHead>
+                <TableHead className='font-bold text-black'>School</TableHead>
+                <TableHead className='font-bold text-black'>Status</TableHead>
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -117,9 +117,9 @@ export default function AdminStudentsPage() {
                 <TableRow key={student.id ?? `student-${index}`}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src="/placeholder.svg" alt={student.name} />
-                        <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                      <Avatar className="h-8 w-8 text-white font-bold">
+                        <AvatarImage src="/placeholder.svg" alt={student.name}/>
+                        <AvatarFallback className='bg-indigo-500'>{student.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <span className="font-medium">{student.name}</span>
                     </div>

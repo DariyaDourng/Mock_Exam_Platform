@@ -21,9 +21,10 @@ interface Question {
 
 interface AddQuestionsToExamProps {
   examId: number;
+  examTitle?: string;
 }
 
-export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) {
+export default function AddQuestionsToExam({ examId, examTitle }: AddQuestionsToExamProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +49,7 @@ export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Questions for Exam #{examId}</CardTitle>
+        <CardTitle>Questions for ${examTitle}</CardTitle>
       </CardHeader>
 
       <CardContent>

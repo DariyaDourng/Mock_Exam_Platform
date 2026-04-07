@@ -161,7 +161,7 @@ export default function QuestionBankPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Question Bank</h1>
@@ -213,14 +213,14 @@ export default function QuestionBankPage() {
             <>
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]">ID</TableHead>
-                    <TableHead className="w-[40%]">Question</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="w-[80px]">Points</TableHead>
-                    <TableHead>Correct Answer</TableHead>
-                    <TableHead className="w-[150px]">Actions</TableHead>
+                  <TableRow className="font-bold text-indigo-600">
+                    <TableHead className="w-[50px] font-bold text-black">ID</TableHead>
+                    <TableHead className="w-[40%] font-bold text-black">Question</TableHead>
+                    <TableHead className="font-bold text-black">Category</TableHead>
+                    <TableHead className="font-bold text-black">Type</TableHead>
+                    <TableHead className="w-[80px] font-bold text-black">Points</TableHead>
+                    <TableHead className="font-bold text-black">Correct Answer</TableHead>
+                    <TableHead className="w-[150px] font-bold text-black">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -238,7 +238,7 @@ export default function QuestionBankPage() {
                   ) : (
                     paginatedQuestions.map((question, index) => (
                       <TableRow key={question.id}>
-                        <TableCell>{startIndex + index + 1}</TableCell>
+                        <TableCell className="font-bold">{startIndex + index + 1}</TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <HelpCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -262,13 +262,13 @@ export default function QuestionBankPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{question.category}</Badge>
+                          <Badge variant="outline" className="text-indigo-500">{question.category}</Badge>
                         </TableCell>
                         <TableCell className="capitalize">
                           {question.type.replace("-", " ")}
                         </TableCell>
                         <TableCell>{question.points}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-green-500 font-bold">
                           {(() => {
                             const correctOptions = question.options.filter(
                               (opt) => opt.isCorrect

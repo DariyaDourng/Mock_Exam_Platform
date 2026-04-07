@@ -186,14 +186,14 @@ export default function AdminExamsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead>Questions</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[155px]">Actions</TableHead>
+                <TableHead className="font-bold text-black">Name</TableHead>
+                <TableHead className="font-bold text-black">Description</TableHead>
+                <TableHead className="font-bold text-black">Course</TableHead>
+                <TableHead className="font-bold text-black">Questions</TableHead>
+                <TableHead className="font-bold text-black">Duration</TableHead>
+                <TableHead className="font-bold text-black">Created At</TableHead>
+                <TableHead className="font-bold text-black">Status</TableHead>
+                <TableHead className="w-[155px] font-bold text-black">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -213,11 +213,11 @@ export default function AdminExamsPage() {
               ) : (
                 exams.map((exam) => (
                   <TableRow key={exam.id}>
-                    <TableCell>{exam.name}</TableCell>
+                    <TableCell className="font-medium">{exam.name}</TableCell>
                     <TableCell>{exam.description}</TableCell>
                     <TableCell>{exam.category_name || "-"}</TableCell>
                     <TableCell>{exam.total_questions}</TableCell>
-                    <TableCell>{exam.duration} min</TableCell>
+                    <TableCell className="font-bold text-indigo-500">{exam.duration} min</TableCell>
                     <TableCell>
                       {new Date(exam.created_at).toLocaleDateString()}
                     </TableCell>

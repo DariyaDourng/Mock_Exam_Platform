@@ -205,12 +205,12 @@ export default function AdminCoursesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Students</TableHead>
-                <TableHead>Exams</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="font-bold text-black">Name</TableHead>
+                <TableHead className="font-bold text-black">Description</TableHead>
+                <TableHead className="font-bold text-black">Students</TableHead>
+                <TableHead className="font-bold text-black">Exams</TableHead>
+                <TableHead className="font-bold text-black">Created</TableHead>
+                <TableHead className="font-bold text-black">Status</TableHead>
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>

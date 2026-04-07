@@ -176,7 +176,7 @@ const Login: React.FC = () => {
 
       <div className="hidden lg:flex flex-col justify-center items-center flex-1 bg-indigo-600 text-white p-10">
         <Image src="/images/Applogo.png" alt="Exam Illustration" width={300} height={300} />
-        <h2 className="mt-6 text-2xl font-bold">Mock Exam Platform</h2>
+        <h2 className="mt-6 text-2xl font-bold uppercase truncate tracking-widest">Mock Exam Platform</h2>
       </div>
     </div>
   );

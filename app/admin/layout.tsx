@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className="text-white font-semibold text-sm">Mock-Exam Admin</span>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>

@@ -4,17 +4,15 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import Cookies from "js-cookie"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, AlertCircle, CheckCircle, XCircle, Clock, Calendar, Timer } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/hooks/use-toast"
-
-//Day.js with timezone
 import dayjs from "dayjs"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
 import { API_URL } from "@/config"
+
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
@@ -67,14 +65,12 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
     async function fetchResult() {
       setLoading(true)
       try {
-        const token = Cookies.get('jwt_token');
-        const res = await axios.get(API_URL+`/api/exam-attempts/${examAttemptId}`, {
-          headers:{
-            Authorization: `Bearer ${token}`,
-          }
+        const token = Cookies.get("jwt_token")
+        const res = await axios.get(API_URL + `/api/exam-attempts/${examAttemptId}`, {
+          headers: { Authorization: `Bearer ${token}` },
         })
         setResult(res.data.data ?? res.data)
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load exam results",
@@ -85,12 +81,9 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
       }
     }
 
-    if (examAttemptId) {
-      fetchResult()
-    }
+    if (examAttemptId) fetchResult()
   }, [examAttemptId])
 
-  //Handle timestamps from both UTC and local
   const formatDateTime = (dt?: string | null) => {
     if (!dt) return "N/A"
     const isUTC = dt.endsWith("Z")
@@ -107,13 +100,13 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
     return (
       <div className="container mx-auto p-6">
         <div className="animate-pulse space-y-6">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-5 bg-gray-200 rounded w-16" />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              <div key={i} className="h-24 bg-gray-200 rounded" />
             ))}
           </div>
-          <div className="h-72 bg-gray-200 rounded"></div>
+          <div className="h-72 bg-gray-200 rounded" />
         </div>
       </div>
     )
@@ -136,34 +129,40 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
   }
 
   const examTitle = result.exam?.name ?? "Exam"
-  const earnedPoints = typeof result.score === "string" ? Number.parseFloat(result.score) : (result.score ?? 0)
+  const earnedPoints =
+    typeof result.score === "string"
+      ? parseFloat(result.score)
+      : (result.score ?? 0)
   const totalPoints = Array.isArray(result.answers)
     ? result.answers.reduce((sum, ans) => sum + Number(ans.points ?? 0), 0)
     : 0
-
-  // Pass if percentage is 50% or more
   const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0
   const isPass = percentage >= 50
 
   return (
-    <div className="container mx-auto p-2 sm:p-6 space-y-6 max-w-7xl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
-        <div className="flex items-center space-x-3 w-full sm:w-auto">
-          <Button variant="ghost" onClick={() => router.back()} className="text-gray-600">
-            <ArrowLeft className="h-4 w-4 mr-1 font-bold text-lg" />
-            <span className="text-lg">Back</span>
-          </Button>
-          
-        </div>
-      </div>
+    <div className="container mx-auto p-2 sm:p-6 max-w-7xl space-y-6">
 
-      {/* Main Content Container */}
-      <div className="bg-gray-50 rounded-lg px-2 py-4 sm:p-6 space-y-6">
-        <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">Exam Name: {examTitle}</h1>
+      {/* ── Everything inside one consistent container ── */}
+      <div className="bg-gray-50 rounded-lg px-4 py-5 sm:p-6 space-y-6">
+
+        {/* ── Page Header with Back Button ── */}
+        <div className="flex items-center gap-4 pb-5 border-b border-gray-200">
+          <button
+            onClick={() => router.back()}
+            className="group inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50 transition-all duration-150 shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+
+          <div className="w-px h-8 bg-gray-200 shrink-0" />
+
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 leading-tight">Exam Results</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{examTitle}</p>
           </div>
-        {/* Score Card */}
+        </div>
+
+        {/* ── Score Card ── */}
         <Card className={`border-2 ${isPass ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}>
           <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-3">
@@ -173,21 +172,27 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
                 <XCircle className="h-10 w-10 text-red-600" />
               )}
               <div>
-                <h2 className="text-lg font-medium text-gray-800">{isPass ? "Congratulations!" : "Keep Trying!"}</h2>
-                <p className="text-sm text-gray-600">You {isPass ? "passed" : "did not pass"} the exam</p>
+                <h2 className="text-lg font-medium text-gray-800">
+                  {isPass ? "Congratulations!" : "Keep Trying!"}
+                </h2>
+                <p className="text-sm text-gray-600">
+                  You {isPass ? "passed" : "did not pass"} the exam
+                </p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-semibold text-gray-800">{earnedPoints.toFixed(2)} points</div>
+              <div className="text-2xl font-semibold text-gray-800">
+                {earnedPoints.toFixed(2)} points
+              </div>
               <div className="text-xs text-gray-500 mt-1">Points scored</div>
               <div className="text-sm font-semibold text-gray-700 mt-1">
-                Total Points: {earnedPoints.toFixed(2)} / {totalPoints.toFixed(2)} ({percentage.toFixed(2)}%)
+                Total: {earnedPoints.toFixed(2)} / {totalPoints.toFixed(2)} ({percentage.toFixed(2)}%)
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Enhanced Timing Information Card */}
+        {/* ── Timing Card ── */}
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-blue-800">
@@ -198,21 +203,21 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center space-x-3 p-3 bg-white rounded-lg border">
-                <Calendar className="h-5 w-5 text-green-600" />
+                <Calendar className="h-5 w-5 text-green-600 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Start Time</p>
                   <p className="text-sm text-gray-600">{formatDateTime(result.date_time_taken)}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-white rounded-lg border">
-                <Calendar className="h-5 w-5 text-red-600" />
+                <Calendar className="h-5 w-5 text-red-600 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">End Time</p>
                   <p className="text-sm text-gray-600">{formatDateTime(result.date_time_finish)}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-white rounded-lg border">
-                <Timer className="h-5 w-5 text-blue-600" />
+                <Timer className="h-5 w-5 text-blue-600 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Duration</p>
                   <p className="text-sm text-gray-600">
@@ -224,7 +229,7 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
           </CardContent>
         </Card>
 
-        {/* Answer List */}
+        {/* ── Answer List ── */}
         <div className="space-y-5">
           {Array.isArray(result.answers) && result.answers.length === 0 && (
             <p className="text-gray-600">No questions answered yet.</p>
@@ -234,19 +239,22 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
             result.answers.map((answer, idx) => (
               <Card
                 key={answer.id}
-                className={`border-l-4 ${answer.status === "correct" ? "border-green-500" : "border-red-500 text-white"}`}
+                className={`border-l-4 ${answer.status === "correct" ? "border-green-500" : "border-red-500"}`}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <div className="text-base font-semibold text-gray-700">Question {idx + 1}</div>
-                    <div className="mt-2 text-[12px] text-gray-500">
-                      Points: {Number(answer.earned_points ?? 0).toFixed(2)} / {Number(answer.points ?? 0).toFixed(2)}
-                    </div>
+                    <span className="text-base font-semibold text-gray-700">
+                      Question {idx + 1}
+                    </span>
+                    <span className="text-xs text-gray-500 font-normal">
+                      Points: {Number(answer.earned_points ?? 0).toFixed(2)} /{" "}
+                      {Number(answer.points ?? 0).toFixed(2)}
+                    </span>
                   </CardTitle>
                   <div className="mt-2 w-full">
                     <Badge
                       variant={answer.status === "correct" ? "default" : "destructive"}
-                      className="w-full text-center"
+                      className="w-full justify-center"
                     >
                       {answer.status === "correct" ? "Correct" : "Incorrect"}
                     </Badge>
@@ -258,9 +266,9 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
                     <p className="mb-4">{answer.question_text}</p>
                   ) : answer.question_image ? (
                     <img
-                      src={answer.question_image || "/placeholder.svg"}
+                      src={answer.question_image}
                       alt={`Question ${idx + 1}`}
-                      className="max-w-full sm:max-w-md rounded-lg border object-contain"
+                      className="max-w-full sm:max-w-md rounded-lg border object-contain mb-4"
                     />
                   ) : (
                     <p className="mb-4 text-gray-500">No question text or image</p>
@@ -268,7 +276,7 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
 
                   <p className="mb-2 font-medium text-gray-700">
                     Your answer:{" "}
-                    <span className="font-normal text-gray-700">
+                    <span className="font-normal">
                       {(() => {
                         try {
                           const parsed = JSON.parse(answer.student_answer)
@@ -280,9 +288,11 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
                     </span>
                   </p>
 
-                  <p className="font-medium text-green-600 max-w-full sm:max-w-xs">
+                  <p className="font-medium text-green-600">
                     Correct answer(s):{" "}
-                    <span className="font-normal text-green-600">{answer.correct_answers.join(", ")}</span>
+                    <span className="font-normal">
+                      {answer.correct_answers.join(", ")}
+                    </span>
                   </p>
                 </CardContent>
               </Card>
