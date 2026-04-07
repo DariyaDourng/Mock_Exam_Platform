@@ -16,7 +16,7 @@ interface Choice {
 
 interface Question {
   id: number
-  subject_name?: string
+  category_name?: string
   type?: string
   format: "text" | "image"
   question_text?: string
@@ -119,9 +119,9 @@ export default function AdminQuestionPreviewPage() {
               <Badge variant="outline" className="mr-3 bg-blue-50 text-indigo-700 border-blue-200 px-3 py-1">
                 Question #{question.id}
               </Badge>
-              {question.subject_name && (
+              {question.category_name && (
                 <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 px-3 py-1">
-                  {question.subject_name}
+                  {question.category_name}
                 </Badge>
               )}
             </div>

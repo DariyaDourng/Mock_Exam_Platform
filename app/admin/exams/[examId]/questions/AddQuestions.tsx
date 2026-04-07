@@ -14,7 +14,7 @@ interface Question {
   id: number;
   question_text: string | null;
   question_image?: string | null;
-  subject_name?: string;
+  category_name?: string;
   type?: string;
   points?: number;
 }
@@ -63,7 +63,7 @@ export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) 
                 <TableRow>
                   <TableHead>ID</TableHead>
                   <TableHead>Question</TableHead>
-                  <TableHead>Subject</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Points</TableHead>
                 </TableRow>
@@ -89,7 +89,7 @@ export default function AddQuestionsToExam({ examId }: AddQuestionsToExamProps) 
                         '[No Question Content]'
                       )}
                     </TableCell>
-                    <TableCell>{q.subject_name || 'Uncategorized'}</TableCell>
+                    <TableCell>{q.category_name || 'Uncategorized'}</TableCell>
                     <TableCell className="capitalize">{q.type?.replace('-', ' ')}</TableCell>
                     <TableCell>{q.points || 1}</TableCell>
                   </TableRow>

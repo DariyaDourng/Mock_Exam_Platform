@@ -16,7 +16,7 @@ interface Test {
   duration: number
   total_questions: number
   difficulty: string
-  subject: string
+  category: string
 }
 
 export default function TestsPage() {
@@ -99,7 +99,7 @@ export default function TestsPage() {
                   </div>
                   <div className="flex items-center text-sm">
                     {/* <Star className="mr-2 h-4 w-4 text-muted-foreground" /> */}
-                    <span>{test.subject}</span>
+                    <span>{test.category}</span>
                   </div>
                 </div>
               </CardContent>

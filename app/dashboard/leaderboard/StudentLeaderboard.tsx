@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import axios from "axios"
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 import {
   Card,
@@ -9,83 +9,69 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import {
-  Timer,
-  Calendar,
-} from "lucide-react"
-import { API_URL } from "@/config"
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Timer, Calendar } from "lucide-react";
+import { API_URL } from "@/config";
 
 export default function StudentLeaderboard() {
-  const [subjects, setSubjects] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<string>("")
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("");
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        setLoading(true)
-        const response = await axios.get(API_URL+"/api/leaderboard")
-        const data = response.data?.data ?? []
-        setSubjects(data)
+        setLoading(true);
+        const response = await axios.get(API_URL + "/api/leaderboard");
+        const data = response.data?.data ?? [];
+        setCategories(data);
 
         if (data.length > 0) {
-          setActiveTab(data[0].subject_id.toString())
+          setActiveTab(data[0].category_id.toString());
         }
       } catch (error) {
-        console.error("Failed to fetch leaderboard data", error)
+        console.error("Failed to fetch leaderboard data", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchLeaderboard()
-  }, [])
+    fetchLeaderboard();
+  }, []);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-   return date.toLocaleString("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  // hour: "numeric",
-  // minute: "2-digit",
-  // hour12: true,
-})
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      // hour: "numeric",
+      // minute: "2-digit",
+      // hour12: true,
+    });
+  };
 
-  }
+  const formatDuration = (duration: string) => {
+    const [minStr, secStr] = duration.split(":");
+    const min = parseInt(minStr);
+    const sec = parseInt(secStr);
 
- const formatDuration = (duration: string) => {
-  const [minStr, secStr] = duration.split(":")
-  const min = parseInt(minStr)
-  const sec = parseInt(secStr)
+    const safeMin = isNaN(min) || min < 0 ? 0 : min;
+    const safeSec = isNaN(sec) || sec < 0 ? 0 : sec;
 
-  const safeMin = isNaN(min) || min < 0 ? 0 : min
-  const safeSec = isNaN(sec) || sec < 0 ? 0 : sec
-
-  return `${safeMin}mn ${safeSec}s`
-}
-
+    return `${safeMin}mn ${safeSec}s`;
+  };
 
   const renderLeaderboardItem = (student: any, index: number) => {
-    const rankNumber = index + 1
+    const rankNumber = index + 1;
 
     // Check if the highest score is a whole number or has decimal places
     const displayScore = Number.isInteger(student.highest_score)
-      ? student.highest_score.toString()  // Display without decimal if integer
-      : student.highest_score.toFixed(2);  // Display with 2 decimal places if it's a float
+      ? student.highest_score.toString() // Display without decimal if integer
+      : student.highest_score.toFixed(2); // Display with 2 decimal places if it's a float
 
     return (
       <div
@@ -93,10 +79,15 @@ export default function StudentLeaderboard() {
         className="grid grid-cols-12 items-center gap-4 p-4 border-b hover:bg-gray-50 transition-colors"
       >
         <div className="col-span-1 flex justify-center">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-            index === 0 ? "bg-indigo-100 text-indigo-700" : 
-            index < 3 ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-700"
-          }`}>
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+              index === 0
+                ? "bg-indigo-100 text-indigo-700"
+                : index < 3
+                  ? "bg-purple-100 text-purple-700"
+                  : "bg-gray-100 text-gray-700"
+            }`}
+          >
             {rankNumber}
           </div>
         </div>
@@ -107,7 +98,8 @@ export default function StudentLeaderboard() {
 
         <div className="col-span-2 text-right">
           {/* Display the highest_score on a 100-point scale, conditionally formatted */}
-          <div>{displayScore}</div>  {/* Display score with or without decimals */}
+          <div>{displayScore}</div>{" "}
+          {/* Display score with or without decimals */}
         </div>
 
         <div className="col-span-2 text-center">
@@ -128,55 +120,80 @@ export default function StudentLeaderboard() {
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="flex gap-2 px-20 justify-around">
-  {subjects.map(subject => (
-    <TabsTrigger
-      key={subject.subject_id}
-      value={subject.subject_id.toString()}
-      className="data-[state=active]:bg-white data-[state=active]:text-black font-medium px-20 "
-    >
-      {subject.subject_name}
-    </TabsTrigger>
-  ))}
-</TabsList>
+        <TabsList className="flex gap-2 px-20 justify-around">
+          {categories.map((category) => (
+            <TabsTrigger
+              key={category.category_id}
+              value={category.category_id.toString()}
+              className="data-[state=active]:bg-white data-[state=active]:text-black font-medium px-20 "
+            >
+              {category.category_name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-        {subjects.map(subject => (
-          <TabsContent value={subject.subject_id.toString()} key={subject.subject_id} className="mt-6">
+        {categories.map((category) => (
+          <TabsContent
+            value={category.category_id.toString()}
+            key={category.category_id}
+            className="mt-6"
+          >
             <Card className="shadow-sm">
               <CardHeader className="pb-4">
-                <CardTitle className="text-xl text-gray-900">{subject.subject_name} Leaderboard</CardTitle>
+                <CardTitle className="text-xl text-gray-900">
+                  {category.category_name} Leaderboard
+                </CardTitle>
                 <CardDescription className="text-gray-600">
-                  Top performers in {subject.subject_name} tests - ranked by highest score
+                  Top performers in {category.category_name} tests - ranked by
+                  highest score
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <p className="text-center text-gray-500 py-8">Loading leaderboard data...</p>
-                ) : subject.leaderboard?.length > 0 ? (
+                  <p className="text-center text-gray-500 py-8">
+                    Loading leaderboard data...
+                  </p>
+                ) : category.leaderboard?.length > 0 ? (
                   <div className="overflow-hidden rounded-lg border">
                     <div className="grid grid-cols-12 bg-gray-50 p-4 border-b">
-                      <div className="col-span-1 text-center text-sm font-medium text-gray-500">Rank</div>
-                      <div className="col-span-3 text-sm font-medium text-gray-500">Student Name</div>
-                      <div className="col-span-2 text-right text-sm font-medium text-gray-500">Score(%)</div>
-                      <div className="col-span-2 text-center text-sm font-medium text-gray-500">Attempts</div>
-                      <div className="col-span-2 text-center text-sm font-medium text-gray-500">Duration</div>
-                      <div className="col-span-2 text-center text-sm font-medium text-gray-500">Test Date</div>
+                      <div className="col-span-1 text-center text-sm font-medium text-gray-500">
+                        Rank
+                      </div>
+                      <div className="col-span-3 text-sm font-medium text-gray-500">
+                        Student Name
+                      </div>
+                      <div className="col-span-2 text-right text-sm font-medium text-gray-500">
+                        Score(%)
+                      </div>
+                      <div className="col-span-2 text-center text-sm font-medium text-gray-500">
+                        Attempts
+                      </div>
+                      <div className="col-span-2 text-center text-sm font-medium text-gray-500">
+                        Duration
+                      </div>
+                      <div className="col-span-2 text-center text-sm font-medium text-gray-500">
+                        Test Date
+                      </div>
                     </div>
 
                     <div className="divide-y">
-                      {subject.leaderboard
+                      {category.leaderboard
                         .slice(0, 10)
-                        .map((student: any, index: number) => renderLeaderboardItem(student, index))}
+                        .map((student: any, index: number) =>
+                          renderLeaderboardItem(student, index),
+                        )}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-gray-500 py-8">No leaderboard data available for this subject.</p>
+                  <p className="text-center text-gray-500 py-8">
+                    No leaderboard data available for this category.
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -184,5 +201,5 @@ export default function StudentLeaderboard() {
         ))}
       </Tabs>
     </div>
-  )
+  );
 }

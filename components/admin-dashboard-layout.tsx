@@ -43,7 +43,7 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
 
   const menuItems = [
     { name: "Dashboard", href: "/admin", icon: Home },
-    { name: "Courses", href: "/admin/courses", icon: BookOpen },
+    { name: "Categories", href: "/admin/Categories", icon: BookOpen },
     { name: "Exams", href: "/admin/exams", icon: FileText },
     { name: "Students", href: "/admin/students", icon: Users },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
@@ -51,7 +51,7 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex">
+      <div className="min-h-screen flex w-full">
         <Sidebar>
           <SidebarHeader className="border-b">
             <div className="flex items-center gap-2 px-2 py-3">
@@ -181,18 +181,20 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
             </div>
           </SidebarFooter>
         </Sidebar>
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+
+        {/* Main content — min-w-0 prevents overflow under sidebar */}
+        <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-            <SidebarTrigger />
-            <div className="ml-auto flex items-center gap-4">
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/admin/help">
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  Help
-                </Link>
-              </Button>
-            </div>
-          </header>
+  <SidebarTrigger className="shrink-0" />
+  <div className="ml-auto flex items-center gap-4">
+    <Button variant="outline" size="sm" asChild>
+      <Link href="/admin/help">
+        <HelpCircle className="mr-2 h-4 w-4" />
+        Help
+      </Link>
+    </Button>
+  </div>
+</header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             {children}
           </main>

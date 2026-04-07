@@ -18,6 +18,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+   experimental: {
+    //Disable Node 25's built-in localStorage which breaks SSR
+    nodeMiddleware: false,
+  },
+  serverExternalPackages: [],
 }
 
 export default nextConfig

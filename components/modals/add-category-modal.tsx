@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,91 +8,97 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Upload, Loader2 } from "lucide-react"
-import toast from "react-hot-toast"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Upload, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface AddCourseModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
   onSubmit: (courseData: {
-    name: string
-    description: string
-    isActive: boolean
-    image: File | null
-  }) => Promise<void>
+    name: string;
+    description: string;
+    isActive: boolean;
+    image: File | null;
+  }) => Promise<void>;
 }
 
-export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+export function AddCourseModal({
+  isOpen,
+  onClose,
+  onSubmit,
+}: AddCourseModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [courseData, setCourseData] = useState({
     name: "",
     description: "",
     isActive: true,
     image: null as File | null,
-  })
-  const [imageError, setImageError] = useState<string | null>(null)
+  });
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const handleChange = (field: keyof typeof courseData, value: any) => {
     setCourseData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setImageError("Please upload a valid image file.")
-      handleChange("image", null)
+      setImageError("Please upload a valid image file.");
+      handleChange("image", null);
     } else if (file.size > 2 * 1024 * 1024) {
-      setImageError("The image size should be less than 2MB.")
-      handleChange("image", null)
+      setImageError("The image size should be less than 2MB.");
+      handleChange("image", null);
     } else {
-      setImageError(null)
-      handleChange("image", file)
+      setImageError(null);
+      handleChange("image", file);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (imageError) {
-      toast.error(imageError)
-      return
+      toast.error(imageError);
+      return;
     }
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await onSubmit(courseData)
+      await onSubmit(courseData);
       // toast.success("Course created successfully")
       setCourseData({
         name: "",
         description: "",
         isActive: true,
         image: null,
-      })
-      onClose()
+      });
+      onClose();
     } catch (error) {
-      console.error("Error submitting course:", error)
-      // toast.error("Failed to create course")
+      console.error("Error submitting category:", error);
+      // toast.error("Failed to create category")
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add New Course</DialogTitle>
-            <DialogDescription>Create a new course for your students.</DialogDescription>
+            <DialogTitle>Add New Category</DialogTitle>
+            <DialogDescription>
+              Create a new category for exam.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
@@ -124,7 +130,7 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
 
             <div className="grid grid-cols-4 items-start gap-4">
               <Label htmlFor="image" className="text-right pt-2">
-                Course Image
+                Category Image
               </Label>
               <div className="col-span-3">
                 <label
@@ -141,7 +147,9 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
                     className="hidden"
                   />
                 </label>
-                {imageError && <p className="text-red-500 text-xs mt-1">{imageError}</p>}
+                {imageError && (
+                  <p className="text-red-500 text-xs mt-1">{imageError}</p>
+                )}
                 {courseData.image && (
                   <img
                     src={URL.createObjectURL(courseData.image)}
@@ -163,10 +171,14 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
                 <Switch
                   id="isActive"
                   checked={courseData.isActive}
-                  onCheckedChange={(checked) => handleChange("isActive", checked)}
+                  onCheckedChange={(checked) =>
+                    handleChange("isActive", checked)
+                  }
                 />
                 <Label htmlFor="isActive" className="text-sm font-normal">
-                  {courseData.isActive ? "Active (visible to students)" : "Draft (hidden from students)"}
+                  {courseData.isActive
+                    ? "Active (visible to students)"
+                    : "Draft (hidden from students)"}
                 </Label>
               </div>
             </div>
@@ -190,5 +202,5 @@ export function AddCourseModal({ isOpen, onClose, onSubmit }: AddCourseModalProp
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,7 +1,9 @@
+'use client';
+
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import dayjs from "dayjs"; // Import dayjs for formatting
+import dayjs from "dayjs";
 import {
   Card,
   CardContent,
@@ -42,9 +44,25 @@ interface Question {
 interface TestData {
   id: string;
   name: string;
-  duration: number; // minutes
+  duration: number;
   questions: Question[];
 }
+
+//Safe localStorage helpers — no-ops on the server
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(key);
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(key, value);
+  },
+  removeItem: (key: string): void => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(key);
+  },
+};
 
 export default function StudentTest({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -79,7 +97,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
     setError(null);
 
     axios
-      .get<{ data: TestData }>(API_URL+`/api/exams/${testId}`)
+      .get<{ data: TestData }>(API_URL + `/api/exams/${testId}`)
       .then((res) => {
         setTestData(res.data.data);
         setTestSubmitted(false);
@@ -87,11 +105,11 @@ export default function StudentTest({ params }: { params: { id: string } }) {
         setFlaggedQuestions({});
 
         const durationSeconds = res.data.data.duration * 60;
-        let storedStartTime = localStorage.getItem(startTimeKey);
+        let storedStartTime = safeLocalStorage.getItem(startTimeKey); 
 
         if (!storedStartTime) {
           storedStartTime = Date.now().toString();
-          localStorage.setItem(startTimeKey, storedStartTime);
+          safeLocalStorage.setItem(startTimeKey, storedStartTime);
         }
 
         const startTimeNum = parseInt(storedStartTime, 10);
@@ -100,8 +118,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
         setTimeLeft(remaining > 0 ? remaining : durationSeconds);
 
-        // Retrieve answers from localStorage
-        const savedAnswers = localStorage.getItem(answersKey);
+        const savedAnswers = safeLocalStorage.getItem(answersKey);
         if (savedAnswers) {
           try {
             setAnswers(JSON.parse(savedAnswers));
@@ -110,15 +127,14 @@ export default function StudentTest({ params }: { params: { id: string } }) {
           }
         }
 
-        // Retrieve the current question index from localStorage
-        const savedCurrentQuestion = localStorage.getItem(currentQuestionKey);
+        const savedCurrentQuestion = safeLocalStorage.getItem(currentQuestionKey);
         if (savedCurrentQuestion) {
           const idx = parseInt(savedCurrentQuestion, 10);
           if (!isNaN(idx) && idx >= 0 && idx < res.data.data.questions.length) {
-            setCurrentQuestion(idx);  // Set to saved question index
+            setCurrentQuestion(idx);
           }
         } else {
-          setCurrentQuestion(0); // Default to first question if none is saved
+          setCurrentQuestion(0);
         }
 
         setLoading(false);
@@ -135,17 +151,16 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (!hasMounted) return;
-    localStorage.setItem(answersKey, JSON.stringify(answers)); // Save answers to localStorage
+    safeLocalStorage.setItem(answersKey, JSON.stringify(answers));
   }, [answers, hasMounted]);
 
   useEffect(() => {
     if (!hasMounted) return;
-    localStorage.setItem(currentQuestionKey, currentQuestion.toString()); // Save current question index
+    safeLocalStorage.setItem(currentQuestionKey, currentQuestion.toString());
   }, [currentQuestion, hasMounted]);
 
   useEffect(() => {
-    if (testSubmitted || loading || error || timeLeft <= 0) return;
-    if (!hasMounted) return;
+    if (testSubmitted || loading || error || timeLeft <= 0 || !hasMounted) return;
 
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -217,12 +232,9 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
   async function fetchUserId(): Promise<number | null> {
     try {
-      const token = Cookies.get('jwt_token');
-      const res = await axios.get(API_URL+"/api/user", {
-        // withCredentials: true,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const token = Cookies.get("jwt_token");
+      const res = await axios.get(API_URL + "/api/user", {
+        headers: { Authorization: `Bearer ${token}` },
       });
       return res.data.id || null;
     } catch (error) {
@@ -234,17 +246,22 @@ export default function StudentTest({ params }: { params: { id: string } }) {
   async function handleSubmitTest() {
     if (!testData) return;
     setTestSubmitted(true);
+
     const userId = await fetchUserId();
     if (!userId) {
       setError("User not logged in or session expired");
       setTestSubmitted(false);
       return;
     }
-    const startTimeNum = parseInt(localStorage.getItem(startTimeKey) || "0", 10);
-    const finishTimeNum = Date.now(); // Finish time (time at submission)
-    const timeSpent = finishTimeNum - startTimeNum; // Time spent in milliseconds
-    const durationMinutes = Math.floor(timeSpent / 60000); // Convert to minutes
-    const durationSecondsLeft = Math.floor((timeSpent % 60000) / 1000); // Remaining seconds
+
+    //Use safeLocalStorage instead of direct localStorage access
+    const storedStart = safeLocalStorage.getItem(startTimeKey);
+    const startTimeNum = parseInt(storedStart || "0", 10);
+    const finishTimeNum = Date.now();
+    const timeSpent = finishTimeNum - startTimeNum;
+    const durationMinutes = Math.floor(timeSpent / 60000);
+    const durationSecondsLeft = Math.floor((timeSpent % 60000) / 1000);
+
     const payload = {
       exam_id: testId,
       user_id: userId,
@@ -252,41 +269,37 @@ export default function StudentTest({ params }: { params: { id: string } }) {
         questionId: q.id,
         answer: answers[idx] || null,
       })),
-      date_time_taken: dayjs(startTimeNum).format("YYYY-MM-DD HH:mm:ss"), // Format the start time
-      date_time_finish: dayjs(finishTimeNum).format("YYYY-MM-DD HH:mm:ss"), // Format the finish time
-      duration_minutes: durationMinutes,  // Send the duration in minutes
-      duration_seconds: durationSecondsLeft,  // Send the duration in seconds
+      date_time_taken: dayjs(startTimeNum).format("YYYY-MM-DD HH:mm:ss"),
+      date_time_finish: dayjs(finishTimeNum).format("YYYY-MM-DD HH:mm:ss"),
+      duration_minutes: durationMinutes,
+      duration_seconds: durationSecondsLeft,
     };
 
     try {
-      // Step 1: Create exam attempt
-      const createRes = await axios.post(
-        API_URL+"/api/exam-attempts",
-        { ...payload, status: "submitted" },
-        // { withCredentials: true }
-      );
+      const createRes = await axios.post(API_URL + "/api/exam-attempts", {
+        ...payload,
+        status: "submitted",
+      });
 
       const attemptId = createRes.data.data.id;
 
-      // Step 2: Grade the exam attempt
       const gradeRes = await axios.post(
-        API_URL+`/api/exam-attempts/${attemptId}/grade`,
-        {},
-        // { withCredentials: true }
+        API_URL + `/api/exam-attempts/${attemptId}/grade`,
+        {}
       );
 
       const score = gradeRes.data.data.attempt.score ?? 0;
       setScore(score);
 
-      // Clear localStorage and timer state
-      localStorage.removeItem(startTimeKey);
-      localStorage.removeItem(answersKey);
-      localStorage.removeItem(currentQuestionKey);
+      //Safe cleanup
+      safeLocalStorage.removeItem(startTimeKey);
+      safeLocalStorage.removeItem(answersKey);
+      safeLocalStorage.removeItem(currentQuestionKey);
 
-      // Redirect to result page
       router.push(`/dashboard/tests/${attemptId}/results?score=${score}`);
     } catch (err: any) {
-      const message = err?.response?.data?.message || err.message || "Failed to submit test";
+      const message =
+        err?.response?.data?.message || err.message || "Failed to submit test";
       setError(message);
       setTestSubmitted(false);
     }
@@ -305,7 +318,6 @@ export default function StudentTest({ params }: { params: { id: string } }) {
   const question = testData.questions[validCurrentQuestion];
   const progress = ((validCurrentQuestion + 1) / testData.questions.length) * 100;
 
-  // Fixed the map by checking if choices is an array
   const options = Array.isArray(question.choices)
     ? question.choices.map((choice) => ({
         id: String(choice.id),
@@ -317,21 +329,16 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
   const questionTypeLabel = (type: string) => {
     switch (type) {
-      case "single-choice":
-        return "Single Choice";
-      case "multiple-choice":
-        return "Multiple Choice";
-      case "true-false":
-        return "True / False";
-      default:
-        return "Unknown Type";
+      case "single-choice": return "Single Choice";
+      case "multiple-choice": return "Multiple Choice";
+      case "true-false": return "True / False";
+      default: return "Unknown Type";
     }
   };
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6">
       <div className="space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{testData.name}</h1>
@@ -353,16 +360,15 @@ export default function StudentTest({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Progress bar */}
         <Progress value={progress} className="h-2" />
 
-        {/* Submitted / Test Card */}
         {testSubmitted ? (
           <Card className="mt-8">
             <CardHeader>
               <CardTitle>Test Submitted</CardTitle>
               <CardDescription>
-                Your answers have been recorded. {score !== null ? `Your score: ${score}%` : "Calculating..."}
+                Your answers have been recorded.{" "}
+                {score !== null ? `Your score: ${score}%` : "Calculating..."}{" "}
                 Redirecting to results...
               </CardDescription>
             </CardHeader>
@@ -373,7 +379,9 @@ export default function StudentTest({ params }: { params: { id: string } }) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl">Question {validCurrentQuestion + 1}</CardTitle>
                 <div className="flex items-center gap-2">
-                  <p className="text-[12px] font-semibold text-indigo-600 border border-indigo-600 p-1 rounded-md bg-indigo-100" >{question.points} points</p>
+                  <p className="text-[12px] font-semibold text-indigo-600 border border-indigo-600 p-1 rounded-md bg-indigo-100">
+                    {question.points} points
+                  </p>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -384,9 +392,7 @@ export default function StudentTest({ params }: { params: { id: string } }) {
                           onClick={() => toggleFlagQuestion(validCurrentQuestion)}
                           aria-label={flaggedQuestions[validCurrentQuestion] ? "Unflag this question" : "Flag this question"}
                         >
-                          <Flag
-                            className={`h-5 w-5 ${flaggedQuestions[validCurrentQuestion] ? "fill-yellow-500 text-yellow-600" : ""}`}
-                          />
+                          <Flag className={`h-5 w-5 ${flaggedQuestions[validCurrentQuestion] ? "fill-yellow-500 text-yellow-600" : ""}`} />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>

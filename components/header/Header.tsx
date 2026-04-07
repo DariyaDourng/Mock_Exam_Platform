@@ -18,7 +18,7 @@ import AdminProfile from '@/app/admin/profile/page';
 import { API_URL } from '@/config';
 
 interface HeaderProps {
-  onToggleSidebar: () => void;
+  onToggleSidebar?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
@@ -81,13 +81,10 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 flex items-center justify-between p-4 border-b bg-white z-50">
-        {/* <button onClick={onToggleSidebar} className="h-10 w-10 text-gray-700 hover:bg-gray-100 rounded"> */}
-          {/* <Bars3Icon className="h-6 w-6" /> */}
-        {/* </button> */}
+      <header className="flex items-center justify-between px-6 py-4 text-white">
         <div className="flex-1" />
         <div className="flex items-center space-x-4">
-          <span>{loading ? 'Loading...' : userName}</span>
+          <span className="text-sm md:text-base">{loading ? 'Loading...' : userName}</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700">

@@ -177,7 +177,7 @@ export default function WelcomePage() {
                       </div>
                       <div>
                         <p className="font-medium">Study guides</p>
-                        <p className="text-sm text-muted-foreground">Comprehensive materials for each subject</p>
+                        <p className="text-sm text-muted-foreground">Comprehensive materials for each category</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">

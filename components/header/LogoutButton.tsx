@@ -11,18 +11,21 @@ const LogoutButton: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(API_URL+'/api/logout', {}, {
-        // withCredentials: true, // important to send cookies
-      });
+      const token = Cookies.get('jwt_token'); //match the key used at login
 
-      // Clear any localStorage tokens if stored
-      Cookies.remove('token');
-
-      // Redirect to login page
-      router.push('/login');
+      await axios.post(
+        API_URL + '/api/logout',
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
     } catch (error) {
       console.error('Logout failed:', error);
-      alert('Logout failed, please try again.');
+    } finally {
+      //Always clear the correct cookie key and redirect
+      Cookies.remove('jwt_token'); // was wrongly 'token' before
+      router.push('/login');
     }
   };
 

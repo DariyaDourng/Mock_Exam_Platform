@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,33 +8,33 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Upload, Loader2 } from "lucide-react"
-import toast from "react-hot-toast"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Upload, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface EditCourseModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
   onSubmit: (courseData: {
-    id: string
-    name: string
-    description: string
-    isActive: boolean
-    image: File | null
-  }) => Promise<void>
+    id: string;
+    name: string;
+    description: string;
+    isActive: boolean;
+    image: File | null;
+  }) => Promise<void>;
   courseData?: {
-    id: string | number
-    name: string
-    description?: string
-    isActive?: boolean
-    status?: string
-    imageUrl?: string // Existing image URL from backend or storage
-  }
+    id: string | number;
+    name: string;
+    description?: string;
+    isActive?: boolean;
+    status?: string;
+    imageUrl?: string; // Existing image URL from backend or storage
+  };
 }
 
 export function EditCourseModal({
@@ -43,8 +43,8 @@ export function EditCourseModal({
   onSubmit,
   courseData,
 }: EditCourseModalProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [imageError, setImageError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     id: "",
@@ -52,10 +52,10 @@ export function EditCourseModal({
     description: "",
     isActive: true,
     image: null as File | null,
-  })
+  });
 
   // State to hold existing image URL for preview
-  const [existingImage, setExistingImage] = useState<string | null>(null)
+  const [existingImage, setExistingImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseData) {
@@ -63,55 +63,56 @@ export function EditCourseModal({
         id: courseData.id.toString(),
         name: courseData.name || "",
         description: courseData.description || "",
-        isActive: courseData.status === "active" || courseData.isActive || false,
+        isActive:
+          courseData.status === "active" || courseData.isActive || false,
         image: null,
-      })
-      setImageError(null)
+      });
+      setImageError(null);
 
       // Set existing image URL from courseData if available
-      setExistingImage(courseData.imageUrl || null)
+      setExistingImage(courseData.imageUrl || null);
     }
-  }, [courseData])
+  }, [courseData]);
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setImageError("Please upload a valid image file.")
-      handleChange("image", null)
+      setImageError("Please upload a valid image file.");
+      handleChange("image", null);
     } else if (file.size > 2 * 1024 * 1024) {
-      setImageError("The image size should be less than 2MB.")
-      handleChange("image", null)
+      setImageError("The image size should be less than 2MB.");
+      handleChange("image", null);
     } else {
-      setImageError(null)
-      handleChange("image", file)
+      setImageError(null);
+      handleChange("image", file);
       // Clear existing image preview because new image is chosen
-      setExistingImage(null)
+      setExistingImage(null);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
     try {
-      await onSubmit(formData)
-      toast.success("Subject updated successfully")
-      onClose()
+      await onSubmit(formData);
+      toast.success("category updated successfully");
+      onClose();
     } catch (error) {
-      console.error("Error updating subject:", error)
-      toast.error("Failed to update subject")
+      console.error("Error updating category:", error);
+      toast.error("Failed to update category");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -119,12 +120,16 @@ export function EditCourseModal({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Edit Course</DialogTitle>
-            <DialogDescription>Update the course information.</DialogDescription>
+            <DialogDescription>
+              Update the category information.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Name</Label>
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -135,7 +140,9 @@ export function EditCourseModal({
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">Description</Label>
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -146,7 +153,9 @@ export function EditCourseModal({
             </div>
 
             <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="image" className="text-right pt-2">Course Image</Label>
+              <Label htmlFor="image" className="text-right pt-2">
+                Course Image
+              </Label>
               <div className="col-span-3">
                 <label
                   htmlFor="image"
@@ -162,7 +171,9 @@ export function EditCourseModal({
                     className="hidden"
                   />
                 </label>
-                {imageError && <p className="text-red-500 text-xs mt-1">{imageError}</p>}
+                {imageError && (
+                  <p className="text-red-500 text-xs mt-1">{imageError}</p>
+                )}
 
                 {/* Show preview */}
                 {formData.image ? (
@@ -186,12 +197,16 @@ export function EditCourseModal({
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="isActive" className="text-right">Active Status</Label>
+              <Label htmlFor="isActive" className="text-right">
+                Active Status
+              </Label>
               <div className="col-span-3 flex items-center space-x-2">
                 <Switch
                   id="isActive"
                   checked={formData.isActive}
-                  onCheckedChange={(checked) => handleChange("isActive", checked)}
+                  onCheckedChange={(checked) =>
+                    handleChange("isActive", checked)
+                  }
                 />
                 <Label htmlFor="isActive" className="text-sm font-normal">
                   {formData.isActive
@@ -220,5 +235,5 @@ export function EditCourseModal({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

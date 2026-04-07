@@ -10,7 +10,7 @@ import { ArrowLeft, AlertCircle, CheckCircle, XCircle, Clock, Calendar, Timer } 
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/hooks/use-toast"
 
-// ✅ Day.js with timezone
+//Day.js with timezone
 import dayjs from "dayjs"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
@@ -90,7 +90,7 @@ export default function ExamResult({ examAttemptId }: ExamResultProps) {
     }
   }, [examAttemptId])
 
-  // ✅ Handle timestamps from both UTC and local
+  //Handle timestamps from both UTC and local
   const formatDateTime = (dt?: string | null) => {
     if (!dt) return "N/A"
     const isUTC = dt.endsWith("Z")

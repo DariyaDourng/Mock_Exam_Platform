@@ -1,3 +1,4 @@
+'use client';
 import Link from "next/link"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +15,7 @@ export default function AdminTestsPage() {
     {
       id: 1,
       name: "Math Fundamentals",
-      subject: "Math",
+      category: "Math",
       questions: 30,
       duration: 45,
       createdAt: "2023-05-01",
@@ -23,7 +24,7 @@ export default function AdminTestsPage() {
     {
       id: 2,
       name: "Logic IQ Test",
-      subject: "Logic IQ",
+      category: "Logic IQ",
       questions: 25,
       duration: 30,
       createdAt: "2023-04-28",
@@ -32,7 +33,7 @@ export default function AdminTestsPage() {
     {
       id: 3,
       name: "Advanced Mathematics",
-      subject: "Math",
+      category: "Math",
       questions: 40,
       duration: 60,
       createdAt: "2023-04-15",
@@ -41,7 +42,7 @@ export default function AdminTestsPage() {
     {
       id: 4,
       name: "Critical Thinking",
-      subject: "Logic IQ",
+      category: "Logic IQ",
       questions: 35,
       duration: 45,
       createdAt: "2023-04-10",
@@ -50,7 +51,7 @@ export default function AdminTestsPage() {
     {
       id: 5,
       name: "Algebra Basics",
-      subject: "Math",
+      category: "Math",
       questions: 25,
       duration: 40,
       createdAt: "2023-04-05",
@@ -102,7 +103,7 @@ export default function AdminTestsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Subject</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Questions</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Created</TableHead>
@@ -119,7 +120,7 @@ export default function AdminTestsPage() {
                         <span>{test.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{test.subject}</TableCell>
+                    <TableCell>{test.category}</TableCell>
                     <TableCell>{test.questions}</TableCell>
                     <TableCell>{test.duration} min</TableCell>
                     <TableCell>{new Date(test.createdAt).toLocaleDateString()}</TableCell>

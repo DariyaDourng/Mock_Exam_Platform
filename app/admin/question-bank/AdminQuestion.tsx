@@ -50,7 +50,7 @@ export default function QuestionBankPage() {
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -88,12 +88,12 @@ export default function QuestionBankPage() {
           text: q.question_text,
           questionImage: q.question_image,
           format: q.format || "text",
-          subject: q.subject_name || "Uncategorized",
+          category: q.category_name || "Uncategorized",
           type: q.type,
           options,
           points: q.points || 1,
           correctAnswer: correctAnswerId.toString(),
-          usedIn: q.used_in_subjects || [],
+          usedIn: q.used_in_categories || [],
         };
       });
 
@@ -110,12 +110,12 @@ export default function QuestionBankPage() {
     fetchQuestions();
   }, []);
 
-  // Filter questions by search and subject
+  // Filter questions by search and category
   const filteredQuestions = questions.filter((question) => {
     const searchableText = typeof question.text === "string" ? question.text : "";
     const matchesSearch = searchableText.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSubject = subjectFilter === "all" || question.subject === subjectFilter;
-    return matchesSearch && matchesSubject;
+    const matchesCategory = categoryFilter === "all" || question.category === categoryFilter;
+    return matchesSearch && matchesCategory;
   });
 
   // Pagination calculation
@@ -127,9 +127,9 @@ export default function QuestionBankPage() {
   // Reset page when filters/search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, subjectFilter]);
+  }, [searchQuery, categoryFilter]);
 
-  const subjects = ["all", ...Array.from(new Set(questions.map((q) => q.subject)))];
+  const categories = ["all", ...Array.from(new Set(questions.map((q) => q.category)))];
 
   const openEditModal = (questionId: string | number) => {
     setSelectedQuestionId(questionId);
@@ -166,7 +166,7 @@ export default function QuestionBankPage() {
         <div>
           <h1 className="text-3xl font-bold">Question Bank</h1>
           <p className="text-muted-foreground">
-            Manage and reuse questions across multiple subjects
+            Manage and reuse questions across multiple categories
           </p>
         </div>
         <Button
@@ -181,14 +181,14 @@ export default function QuestionBankPage() {
         <CardHeader className="flex flex-row items-center">
           <CardTitle>All Questions</CardTitle>
           <div className="ml-auto flex items-center gap-2">
-            <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Filter by course" />
+                <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
-                {subjects.map((subject) => (
-                  <SelectItem key={subject} value={subject}>
-                    {subject === "all" ? "All Categories" : subject}
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category === "all" ? "All Categories" : category}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -216,7 +216,7 @@ export default function QuestionBankPage() {
                   <TableRow>
                     <TableHead className="w-[50px]">ID</TableHead>
                     <TableHead className="w-[40%]">Question</TableHead>
-                    <TableHead>Course</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead className="w-[80px]">Points</TableHead>
                     <TableHead>Correct Answer</TableHead>
@@ -230,7 +230,7 @@ export default function QuestionBankPage() {
                         colSpan={7}
                         className="text-center py-8 text-muted-foreground"
                       >
-                        {searchQuery || subjectFilter !== "all"
+                        {searchQuery || categoryFilter !== "all"
                           ? "No questions match your search criteria."
                           : "No questions found. Add your first question."}
                       </TableCell>
@@ -262,7 +262,7 @@ export default function QuestionBankPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{question.subject}</Badge>
+                          <Badge variant="outline">{question.category}</Badge>
                         </TableCell>
                         <TableCell className="capitalize">
                           {question.type.replace("-", " ")}

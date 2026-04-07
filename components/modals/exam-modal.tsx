@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import toast from "react-hot-toast"
+import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import {
   Dialog,
   DialogContent,
@@ -9,62 +9,74 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Loader2 } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Loader2 } from "lucide-react";
 
 interface ExamModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (examData: any) => Promise<void>
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (examData: any) => Promise<void>;
   examData?: {
-    id?: string | number
-    name: string
-    course?: string | number | { id?: string | number }
-    description?: string
-    duration?: string | number
-    questions?: string | number
-    passingScore?: string | number
-    status?: string
-    isActive?: boolean
-  }
-  courses: { id: string | number; name: string }[]
+    id?: string | number;
+    name: string;
+    category?: string | number | { id?: string | number };
+    description?: string;
+    duration?: string | number;
+    questions?: string | number;
+    passingScore?: string | number;
+    status?: string;
+    isActive?: boolean;
+  };
+  Categories: { id: string | number; name: string }[];
 }
 
-export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: ExamModalProps) {
-  const isEdit = !!examData?.id
-  const [isSubmitting, setIsSubmitting] = useState(false)
+export function ExamModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  examData,
+  Categories,
+}: ExamModalProps) {
+  const isEdit = !!examData?.id;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     id: "",
     name: "",
-    course: "",
+    category: "",
     description: "",
     duration: "45",
     questions: "30",
     passingScore: "70",
     isActive: true,
-  })
+  });
 
   useEffect(() => {
     // Determine courseId string safely, handling both object or primitive
-    let courseId = ""
+    let courseId = "";
     if (examData) {
-      if (typeof examData.course === "object" && examData.course !== null) {
-        courseId = examData.course.id?.toString() || ""
+      if (typeof examData.category === "object" && examData.category !== null) {
+        courseId = examData.category.id?.toString() || "";
       } else {
-        courseId = examData.course?.toString() || ""
+        courseId = examData.category?.toString() || "";
       }
 
       setFormData({
         id: examData.id?.toString() || "",
         name: examData.name || "",
-        course: courseId,
+        category: courseId,
         description: examData.description || "",
         duration: examData.duration?.toString() || "45",
         questions: examData.questions?.toString() || "30",
@@ -73,47 +85,47 @@ export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: Exam
           typeof examData.isActive === "boolean"
             ? examData.isActive
             : examData.status === "active",
-      })
+      });
     } else {
       setFormData({
         id: "",
         name: "",
-        course: "",
+        category: "",
         description: "",
         duration: "45",
         questions: "30",
         passingScore: "70",
         isActive: true,
-      })
+      });
     }
-  }, [examData, courses])
+  }, [examData, Categories]);
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
     try {
-      if (!formData.course) {
-        toast.error("Please select a course.")
-        setIsSubmitting(false)
-        return
+      if (!formData.category) {
+        toast.error("Please select a category.");
+        setIsSubmitting(false);
+        return;
       }
-      await onSubmit(formData)
+      await onSubmit(formData);
       // toast.success(isEdit ? "Exam updated successfully!" : "Exam created successfully!")
-      onClose()
+      onClose();
     } catch (error) {
-      toast.error("Failed to submit exam. Please try again.")
-      console.error("Error submitting exam:", error)
+      toast.error("Failed to submit exam. Please try again.");
+      console.error("Error submitting exam:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -122,7 +134,9 @@ export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: Exam
           <DialogHeader>
             <DialogTitle>{isEdit ? "Edit Exam" : "Add New Exam"}</DialogTitle>
             <DialogDescription>
-              {isEdit ? "Update the exam information." : "Create a new exam for your students."}
+              {isEdit
+                ? "Update the exam information."
+                : "Create a new exam for your students."}
             </DialogDescription>
           </DialogHeader>
 
@@ -141,20 +155,23 @@ export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: Exam
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="course" className="text-right">
-                Course
+              <Label htmlFor="category" className="text-right">
+                Category
               </Label>
               <Select
-                value={formData.course}
-                onValueChange={(value) => handleChange("course", value)}
+                value={formData.category}
+                onValueChange={(value) => handleChange("category", value)}
               >
-                <SelectTrigger id="course" className="col-span-3">
-                  <SelectValue placeholder="Select course" />
+                <SelectTrigger id="category" className="col-span-3">
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {courses.map((course) => (
-                    <SelectItem key={course.id} value={course.id.toString()}>
-                      {course.name}
+                  {Categories.map((category) => (
+                    <SelectItem
+                      key={category.id}
+                      value={category.id.toString()}
+                    >
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -203,7 +220,7 @@ export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: Exam
                 required
               />
             </div>
-{/* 
+            {/* 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="passingScore" className="text-right">
                 Passing Score (%)
@@ -228,10 +245,14 @@ export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: Exam
                 <Switch
                   id="isActive"
                   checked={formData.isActive}
-                  onCheckedChange={(checked) => handleChange("isActive", checked)}
+                  onCheckedChange={(checked) =>
+                    handleChange("isActive", checked)
+                  }
                 />
                 <Label htmlFor="isActive" className="text-sm font-normal">
-                  {formData.isActive ? "Active (visible to students)" : "Draft (hidden from students)"}
+                  {formData.isActive
+                    ? "Active (visible to students)"
+                    : "Draft (hidden from students)"}
                 </Label>
               </div>
             </div>
@@ -257,5 +278,5 @@ export function ExamModal({ isOpen, onClose, onSubmit, examData, courses }: Exam
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

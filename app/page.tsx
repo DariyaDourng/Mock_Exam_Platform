@@ -203,56 +203,74 @@ const HeroSection = () => {
 }
 
 // Test Cards Section
-// Subjects Cards Section (fetching from backend)
+//Categories Cards Section (fetching from backend)
 const TestCards: React.FC = () => {
-  const [subjects, setSubjects] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const fetchSubjects = async () => {
+  const fetchCategories = async () => {
     try {
-      const response = await axios.get(API_URL+'/api/subjects')
+      setIsLoading(true)
+      const response = await axios.get(API_URL + '/api/categories')
       const data = response.data.data || []
-      setSubjects(data)
+      setCategories(data)
     } catch (error) {
-      console.error('Error fetching subjects:', error)
+      setCategories([])
+    } finally {
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchSubjects()
+    fetchCategories()
   }, [])
 
-return (
+  return (
     <section className="py-4 bg-gray-50" id="tests">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-4xl font-bold mb-12 text-gray-900">Available Courses For Exam</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {subjects.map((subject) => (
-            <div
-              key={subject.id}
-              className="p-8 bg-white rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-gray-100 hover:border-indigo-300 flex flex-col justify-between"
-            >
-              <div className="flex flex-col items-center">
-                <Image
-                  src={subject.imageUrl || '/placeholder.svg'}
-                  alt={subject.name}
-                  width={200}
-                  height={200}
-                  className="mx-auto mb-2"
-                />
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3 text-center">{subject.name}</h3>
-                <p className="text-lg text-gray-600 mb-4 text-center">{subject.description}</p>
-              </div>
-              <div className="mt-auto pt-4 text-center">
-                <Link
-                  href={`/login`}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-                >
-                  View Exam
-                </Link>
-              </div>
+        <h2 className="text-4xl font-bold mb-12 text-gray-900">Available Categories For Exam</h2>
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              <p className="mt-4 text-gray-600 text-lg">Loading categories...</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 text-center">
+            <p className="text-blue-700 text-lg">There is no exam available yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {categories.map((category) => (
+              <div
+                key={category.id}
+                className="p-8 bg-white rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-gray-100 hover:border-indigo-300 flex flex-col justify-between"
+              >
+                <div className="flex flex-col items-center">
+                  <Image
+                    src={category.imageUrl || '/placeholder.svg'}
+                    alt={category.name}
+                    width={200}
+                    height={200}
+                    className="mx-auto mb-2"
+                  />
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-3 text-center">{category.name}</h3>
+                  <p className="text-lg text-gray-600 mb-4 text-center">{category.description}</p>
+                </div>
+                <div className="mt-auto pt-4 text-center">
+                  <Link
+                    href={`/login`}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                  >
+                    View Exam
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
@@ -298,7 +316,7 @@ const InspirationalQuotes = () => {
 const Leaderboard = () => {
   const leaderboards = [
     {
-      subject: "Math",
+      category: "Math",
       data: [
         ["Alice", 98],
         ["Bob", 96],
@@ -306,7 +324,7 @@ const Leaderboard = () => {
       ],
     },
     {
-      subject: "Logic",
+      category: "Logic",
       data: [
         ["Kate", 97],
         ["Leo", 96],
@@ -314,7 +332,7 @@ const Leaderboard = () => {
       ],
     },
     {
-      subject: "English",
+      category: "English",
       data: [
         ["Uma", 99],
         ["Victor", 97],
@@ -361,7 +379,7 @@ const Leaderboard = () => {
           {leaderboards.map((board, boardIndex) => (
             <div key={boardIndex} className="bg-white rounded-xl p-6 border border-gray-200 shadow-lg">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">{board.subject}</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">{board.category}</h3>
                 <div className="w-12 h-1 bg-indigo-600 mx-auto rounded-full"></div>
               </div>
 
@@ -420,7 +438,7 @@ const About = () => {
         <div className="bg-gray-50 rounded-2xl p-8 shadow-lg border border-gray-200">
           <p className="text-lg text-gray-700 leading-relaxed">
             The Mock Exam Platform is designed to help students and professionals prepare for competitive exams by
-            offering realistic, subject-specific practice tests in Math, Logic, and English.
+            offering realistic, Category-specific practice tests in Math, Logic, and English.
           </p>
           <p className="text-lg text-gray-700 mt-4 leading-relaxed">
             Our mission is to provide a free and accessible space for learners to test their knowledge, build

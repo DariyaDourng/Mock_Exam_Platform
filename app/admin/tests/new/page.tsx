@@ -71,10 +71,10 @@ export default function NewTestPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="subject">Subject</Label>
+                      <Label htmlFor="category">Category</Label>
                       <Select defaultValue="math">
-                        <SelectTrigger id="subject">
-                          <SelectValue placeholder="Select subject" />
+                        <SelectTrigger id="category">
+                          <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="math">Math</SelectItem>

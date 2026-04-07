@@ -1,22 +1,10 @@
 'use client'
-import React from 'react'
-
-import StudentSidebar from '@/components/sidebar/student-sidebar';
-import Header from '@/components/header/Header';
 import TestsPage from './TestStudent';
 
-
-
-function StudentLeaderboardPage() {
+export default function StudentTestsPage() {
   return (
-  <div className="flex flex-col h-screen">
-        <Header  onToggleSidebar={() => {}}/>  
-        <div className="flex h-screen">
-          <StudentSidebar />       
-          <main className="flex-1 overflow-y-auto p-6 py-28 bg-gray-100"><TestsPage/></main>
-        </div>
-      </div>
-  )
+    <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
+      <TestsPage />
+    </main>
+  );
 }
-
-export default StudentLeaderboardPage;

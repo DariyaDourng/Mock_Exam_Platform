@@ -27,7 +27,7 @@ export default function AdminDashboard() {
 
     try {
       const [coursesRes, examsRes, studentsRes, scoresRes, enrollmentsRes] = await Promise.all([
-        axios.get(API_URL+"/api/totalsubjects"),
+        axios.get(API_URL+"/api/totalCategories"), // Fixed this route
         axios.get(API_URL+"/api/countExams"), // Fixed this route
         axios.get(API_URL+"/api/students"),
         axios.get(API_URL+"/api/average-scores"),
@@ -95,11 +95,11 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Cards for Total Courses, Students, Avg Score, etc. */}
+      {/* Cards for Total Categories, Students, Avg Score, etc. */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border border-indigo-600 bg-indigo-50">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
