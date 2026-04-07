@@ -12,10 +12,10 @@ use Illuminate\Http\Request;
 
 class ExamController extends Controller
 {
-    // List all exams with their subjects
+    // List all exams with their categories
     public function index()
     {
-        $exams = Exam::with('subject')->latest()->get();
+        $exams = Exam::with('category')->latest()->get();
 
         if ($exams->count() > 0) {
             return ExamResource::collection($exams);
@@ -27,25 +27,25 @@ class ExamController extends Controller
         ], 200);
     }
 
-    // Create new exam with random questions based on subject
+    // Create new exam with random questions based on category
     public function store(StoreExamRequest $request)
     {
         try {
             $validated = $request->validated();
 
             // Check if there are enough questions available
-            $totalQuestions = Question::where('subject_id', $validated['subject_id'])->count();
+            $totalQuestions = Question::where('category_id', $validated['category_id'])->count();
             if ($totalQuestions < $validated['total_questions']) {
                 return response()->json([
                     'status' => 422,
-                    'message' => 'Not enough questions available in the selected subject.',
+                    'message' => 'Not enough questions available in the selected category.',
                 ], 422);
             }
 
             // Create the exam
             $exam = Exam::create([
                'name' => $validated['name'],
-                'subject_id' => $validated['subject_id'],
+                'category_id' => $validated['category_id'],
                 'description' => $validated['description'] ?? null,
                 'duration' => $validated['duration'] ?? null,
                 'total_questions' => $validated['total_questions'],
@@ -53,8 +53,8 @@ class ExamController extends Controller
                 'is_active' => $validated['is_active'] ?? 1,
             ]);
 
-            // Fetch random questions based on subject and required number of questions
-            $questions = Question::where('subject_id', $validated['subject_id'])
+            // Fetch random questions based on category and required number of questions
+            $questions = Question::where('category_id', $validated['category_id'])
                 ->inRandomOrder()
                 ->limit($validated['total_questions'])
                 ->get();
@@ -80,23 +80,23 @@ class ExamController extends Controller
   public function showQuestions($examId)
 {
     try {
-        // Retrieve the exam along with questions and their choices, including the subject name
+        // Retrieve the exam along with questions and their choices, including the category name
         $exam = Exam::with(['questions' => function ($query) {
             $query->inRandomOrder(); // Randomize the order of questions
-        }, 'questions.choices', 'questions.subject']) // Assuming `questions` has a relationship to `subject`
+        }, 'questions.choices', 'questions.category']) // Assuming `questions` has a relationship to `category`
             ->findOrFail($examId);
 
-        // Include the subject name directly in the response
-        $questionsWithSubjectName = $exam->questions->map(function ($question) {
-            // Adding subject_name directly to each question
-            $question->subject_name = $question->subject ? $question->subject->name : null;
+        // Include the category name directly in the response
+        $questionsWithCategoryName = $exam->questions->map(function ($question) {
+            // Adding category_name directly to each question
+            $question->category_name = $question->category ? $question->category->name : null;
             return $question;
         });
 
-        // Return the randomized questions with choices and subject names
+        // Return the randomized questions with choices and category names
         return response()->json([
             'status' => 200,
-            'data' => $questionsWithSubjectName, // Return the randomized questions with the subject name
+            'data' => $questionsWithCategoryName, // Return the randomized questions with the category name
         ]);
     } catch (ModelNotFoundException $e) {
         return response()->json(['message' => 'Exam not found'], 404);
@@ -108,7 +108,7 @@ class ExamController extends Controller
     public function show($id)
     {
         try {
-            $exam = Exam::with(['subject', 'questions.choices'])->findOrFail($id);
+            $exam = Exam::with(['category', 'questions.choices'])->findOrFail($id);
             return new ExamResource($exam);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Exam not found'], 404);

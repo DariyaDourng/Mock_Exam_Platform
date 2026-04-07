@@ -285,7 +285,7 @@ class ExamAttemptController extends Controller
 
             // Get enrollments (excluding NULL started_at)
             $enrollments = ExamAttempt::whereNotNull('started_at')
-                                      ->groupBy('exam_id')  // Group by exam_id to get enrollments per subject
+                                      ->groupBy('exam_id')  // Group by exam_id to get enrollments per category
                                       ->selectRaw('exam_id, COUNT(DISTINCT user_id) as count')
                                       ->get();
 

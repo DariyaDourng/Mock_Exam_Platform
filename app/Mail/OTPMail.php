@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
@@ -19,7 +20,7 @@ class OTPMail extends Mailable
     public function build()
     {
         return $this->from($this->data['fromEmail'], $this->data['fromName'])
-            ->subject($this->data['subject'])
+            ->category($this->data['category'])
             ->view('emails.otpEmailTemplate')
             ->with(['otp' => $this->data['otp']]);
     }

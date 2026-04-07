@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Question;
-use Illuminate\Http\Request;
 use App\Http\Requests\StoreQuestionRequest;
 use App\Http\Requests\UpdateQuestionRequest;
 use App\Http\Resources\QuestionResource;
+use App\Models\Question;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 
 class QuestionController extends Controller
 {
     public function index()
     {
-        $questions = Question::with(['subject', 'choices'])->latest()->get();
+        $questions = Question::with(['category', 'choices'])->latest()->get();
 
         if ($questions->count() > 0) {
             return QuestionResource::collection($questions);
@@ -29,12 +27,12 @@ class QuestionController extends Controller
 
     public function store(StoreQuestionRequest $request)
     {
-            \Log::info('Store method hit!');
+        \Log::info('Store method hit!');
         try {
             // Decode choices JSON string if present
             if ($request->has('choices') && is_string($request->choices)) {
                 $decoded = json_decode($request->choices, true);
-                if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
                     return response()->json([
                         'status' => 422,
                         'message' => 'Invalid JSON format for choices.',
@@ -55,18 +53,22 @@ class QuestionController extends Controller
             }
 
             // Handle image upload if format is image
+            // $imagePath = null;
+            // if (($data['format'] ?? null) === 'image' && $request->hasFile('question_image')) {
+            //     // $imagePath = $request->file('question_image')->store('questions', 'public');
+            //     $imagePath = Cloudinary::upload($request->file('question_image')->getRealPath(),[
+
+            //         'folder' => 'mock-exam/questions',
+            //         'resource_type' => 'auto',
+            //     ])->getSecurePath();
+            // }
             $imagePath = null;
             if (($data['format'] ?? null) === 'image' && $request->hasFile('question_image')) {
-                // $imagePath = $request->file('question_image')->store('questions', 'public');
-                $imagePath = Cloudinary::upload($request->file('question_image')->getRealPath(),[
-
-                    'folder' => 'mock-exam/questions',
-                    'resource_type' => 'auto',
-                ])->getSecurePath();
+                $imagePath = $request->file('question_image')->store('questions/images', 'public');
             }
             // Create question
             $question = Question::create([
-                'subject_id' => $data['subject_id'],
+                'category_id' => $data['category_id'],
                 'type' => $data['type'],
                 'format' => $data['format'],
                 'question_text' => $data['format'] === 'text' ? $data['question_text'] : null,
@@ -78,10 +80,11 @@ class QuestionController extends Controller
             foreach ($data['choices'] as $choice) {
                 $question->choices()->create($choice);
             }
+
             return response()->json([
                 'status' => 200,
                 'message' => 'Question created successfully',
-                'data' => new QuestionResource($question->load(['subject', 'choices'])),
+                'data' => new QuestionResource($question->load(['category', 'choices'])),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -94,7 +97,7 @@ class QuestionController extends Controller
 
     public function show(Question $question)
     {
-        return new QuestionResource($question->load(['subject', 'choices']));
+        return new QuestionResource($question->load(['category', 'choices']));
     }
 
     public function update(UpdateQuestionRequest $request, Question $question)
@@ -103,7 +106,7 @@ class QuestionController extends Controller
             // Decode choices JSON string if present
             if ($request->has('choices') && is_string($request->choices)) {
                 $decoded = json_decode($request->choices, true);
-                if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
                     return response()->json([
                         'status' => 422,
                         'message' => 'Invalid JSON format for choices.',
@@ -115,7 +118,7 @@ class QuestionController extends Controller
             $data = $request->validated();
 
             // Validate at least one correct answer if choices provided
-            if (!empty($data['choices'])) {
+            if (! empty($data['choices'])) {
                 $correctAnswers = collect($data['choices'])->where('is_correct', true)->count();
                 if ($correctAnswers < 1) {
                     return response()->json([
@@ -142,7 +145,7 @@ class QuestionController extends Controller
             }
 
             // Update question fields
-            $question->subject_id = $data['subject_id'] ?? $question->subject_id;
+            $question->category_id = $data['category_id'] ?? $question->category_id;
             $question->type = $data['type'] ?? $question->type;
             $question->format = $data['format'] ?? $question->format ?? null;
             $question->question_text = ($data['format'] === 'text' && isset($data['question_text'])) ? $data['question_text'] : $question->question_text;
@@ -152,7 +155,7 @@ class QuestionController extends Controller
             $question->save();
 
             // Update choices if provided
-            if (!empty($data['choices'])) {
+            if (! empty($data['choices'])) {
                 // Delete old choices
                 $question->choices()->delete();
 
@@ -165,7 +168,7 @@ class QuestionController extends Controller
             return response()->json([
                 'status' => 200,
                 'message' => 'Question updated successfully',
-                'data' => new QuestionResource($question->load(['subject', 'choices'])),
+                'data' => new QuestionResource($question->load(['category', 'choices'])),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

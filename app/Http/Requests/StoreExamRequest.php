@@ -23,7 +23,7 @@ class StoreExamRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255|unique:exams,name',
-            'subject_id'=> 'required|exists:subjects,id',
+            'category_id'=> 'required|exists:categories,id',
             'description'=> 'nullable|string',
             'duration' => 'required|integer|min:1',
             'total_questions' => 'sometimes|required|integer|min:1',

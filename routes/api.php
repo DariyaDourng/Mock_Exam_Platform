@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChoiceController;
 use App\Http\Controllers\ExamAttemptController;
 use App\Http\Controllers\ExamController;
@@ -13,9 +12,9 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolController;
-use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UserExamController;
-use App\Models\Subject;
+use App\Models\Category;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
@@ -98,12 +97,12 @@ Route::middleware(['auth:api'])->group(function () {
     });
 });
 
-// Subject Routes
-Route::post('/subjects', [SubjectController::class, 'store']);
-Route::get('/subjects/{subject}', [SubjectController::class, 'show']);
-Route::get('/subjects', [SubjectController::class, 'index']);
-Route::put('/subjects/{subject}', [SubjectController::class, 'update']);
-Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy']);
+// Category Routes
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::get('/categories/{category}', [CategoryController::class, 'show']);
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::put('/categories/{category}', [CategoryController::class, 'update']);
+Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
 // Exam Routes
 Route::post('exams', [ExamController::class, 'store']);
@@ -128,7 +127,7 @@ Route::get('/questions/{question}/choices', [ChoiceController::class, 'choicesBy
 Route::post('/questions/{question}/choices', [ChoiceController::class, 'storeOrUpdateChoices']);
 
 // Category Routes
-Route::apiResource('categories', CategoryController::class);
+// Route::apiResource('categories', CategoryController::class);
 
 // Exam Questions Management
 Route::post('/exams/{exam}/questions', [ExamController::class, 'addQuestions']);
@@ -138,7 +137,7 @@ Route::get('/exams/{exam}/questions', [ExamController::class, 'showQuestions']);
 // Redundant exam show route (already declared above, you can remove one if duplicated)
 Route::get('/exams/{exam}', [ExamController::class, 'show']);
 
-// School Routes
+// school Routes
 Route::apiResource('schools', SchoolController::class);
 
 // Route::apiResource('exam-attempts', ExamAttemptController::class);
@@ -165,7 +164,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     ]);
 });
 
-// Route::get('/leaderboard/{subjectId}', [LeaderBoardController::class, 'leaderboard']);
+// Route::get('/leaderboard/{categoryId}', [LeaderBoardController::class, 'leaderboard']);
 
 Route::get('/leaderboard', [LeaderBoardController::class, 'fullLeaderboard']);
 
@@ -176,13 +175,13 @@ Route::get('/user-exams', [UserExamController::class, 'userExams']);
 Route::get('/enrollments', [ExamAttemptController::class, 'getEnrollmentData']);
 Route::get('/students', [UserController::class, 'getTotalStudents']);
 Route::get('/average-scores', [ExamAttemptController::class, 'getAverageScores']);
-Route::get('/totalsubjects', [SubjectController::class, 'getTotalSubjects']);
+Route::get('/totalCategories', [CategoryController::class, 'getTotalCategories']);
 Route::get('/countExams', [ExamController::class, 'getTotalExams']);
 Route::get('/student', [UserController::class, 'getStudents']);
 
 Route::post('/questions', [QuestionController::class, 'store']);
 
-Route::get('subjects/{subject}/student-and-exam-count', [SubjectController::class, 'getStudentAndExamCount']);
+Route::get('categories/{category}/student-and-exam-count', [CategoryController::class, 'getStudentAndExamCount']);
 
 
 Route::get('/users/students', [UserController::class, 'getStudents']);

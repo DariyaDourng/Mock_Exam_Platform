@@ -18,8 +18,8 @@ class QuestionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'subject' => new SubjectResource($this->whenLoaded('subject')),
-            'subject_name' => $this->subject?->name,
+            'category' => new CategoryResource($this->whenLoaded('category')),
+            'category_name' => $this->category?->name,
             'type' => $this->type,
             'format' => $this->format,
             'question_text' => $this->question_text,

@@ -14,15 +14,15 @@ class Exam extends Model
 
     protected $fillable=[
         'name',
-        'subject_id',
+        'category_id',
         'description',
         'duration',
         'total_questions',
         'is_active',
     ];
 
-    public function subject(){
-        return $this->belongsTo(Subject::class, 'subject_id');
+    public function category(){
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function questions(){

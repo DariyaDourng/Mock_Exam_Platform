@@ -22,7 +22,7 @@ class UpdateQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-    'subject_id' => ['sometimes', 'exists:subjects,id'],
+    'category_id' => ['sometimes', 'exists:categories,id'],
     'type' => ['sometimes', 'in:single-choice,multiple-choice,true-false'],
     'format' => ['sometimes', 'in:text,image'],
     'question_text' => ['sometimes', 'required_if:format,text', 'string', 'nullable'],

@@ -8,23 +8,23 @@ use Illuminate\Http\Request;
 class UserExamController extends Controller
 {
     /**
-     * Get the list of subjects the user has attempted.
+     * Get the list of categories the user has attempted.
      */
     public function userExams(Request $request)
 {
     $user = $request->user();
 
-    $subjects = ExamAttempt::where('user_id', $user->id)
+    $categories = ExamAttempt::where('user_id', $user->id)
         ->join('exams', 'exam_attempts.exam_id', '=', 'exams.id')
-        ->join('subjects', 'exams.subject_id', '=', 'subjects.id')
-        ->select('subjects.id as subject_id', 'subjects.name as subject_name')
+        ->join('categories', 'exams.category_id', '=', 'categories.id')
+        ->select('categories.id as category_id', 'categories.name as category_name')
         ->distinct()
         ->get();
 
     return response()->json([
         'status' => 200,
-        'message' => 'User attempted subjects fetched successfully',
-        'data' => $subjects,
+        'message' => 'User attempted categories fetched successfully',
+        'data' => $categories,
     ]);
 }
 

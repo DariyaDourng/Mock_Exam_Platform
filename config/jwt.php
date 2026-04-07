@@ -173,7 +173,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Lock Subject
+    | Lock category
     |--------------------------------------------------------------------------
     |
     | This will determine whether a `prv` claim is automatically added to

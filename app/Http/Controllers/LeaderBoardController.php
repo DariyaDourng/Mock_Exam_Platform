@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Exam;
 use App\Models\ExamAttempt;
-use App\Models\Subject;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
@@ -13,13 +13,13 @@ class LeaderBoardController extends Controller
 {
     public function fullLeaderboard()
 {
-    // Get all subjects
-    $subjects = Subject::all();
+    // Get all categories
+    $categories = Category::all();
 
-    // Prepare leaderboard results for each subject
-    $results = $subjects->map(function ($subject) {
-        // Get all exam IDs for the subject
-        $examIds = Exam::where('subject_id', $subject->id)->pluck('id');
+    // Prepare leaderboard results for each category
+    $results = $categories->map(function ($category) {
+        // Get all exam IDs for the category
+        $examIds = Exam::where('category_id', $category->id)->pluck('id');
 
         // Get the highest score across all attempts for each user
         $topUsers = ExamAttempt::select('user_id', 
@@ -31,7 +31,7 @@ class LeaderBoardController extends Controller
             ->get();
 
         // Prepare the leaderboard for the top users
-        $leaderboard = $topUsers->map(function ($item) use ($examIds, $subject) {
+        $leaderboard = $topUsers->map(function ($item) use ($examIds, $category) {
             // Get the most recent attempt for the user (for date and duration)
             $latestAttempt = ExamAttempt::where('user_id', $item->user_id)
                 ->whereIn('exam_id', $examIds)
@@ -44,7 +44,7 @@ class LeaderBoardController extends Controller
                 return null;
             }
 
-            // Get the total number of attempts for the user in this subject
+            // Get the total number of attempts for the user in this category
             $testsCount = ExamAttempt::where('user_id', $item->user_id)
                 ->whereIn('exam_id', $examIds)
                 ->count();
@@ -90,8 +90,8 @@ class LeaderBoardController extends Controller
         })->filter();  // Remove null entries if any
 
         return [
-            'subject_id' => $subject->id,
-            'subject_name' => $subject->name,
+            'category_id' => $category->id,
+            'category_name' => $category->name,
             'leaderboard' => $leaderboard,
         ];
     });

@@ -9,7 +9,7 @@ class Question extends Model
     // The fillable attributes define which attributes can be mass-assigned
     protected $fillable = [
         'question_text',
-        'subject_id',
+        'category_id',
         'type',
         'format',
         'question_image',
@@ -17,10 +17,10 @@ class Question extends Model
         'explanation',
     ];
 
-    // Relationship with the Subject model
-    public function subject()
+    // Relationship with the Category model
+    public function category()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(Category::class);
     }
 
     // Relationship with the Choice model (each question can have many choices)

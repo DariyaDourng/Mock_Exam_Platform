@@ -23,7 +23,7 @@ class UpdateExamRequest extends FormRequest
     {
             return [
             'name' => 'sometimes|required|string|max:255',
-            'subject_id' => 'sometimes|required|exists:subjects,id',
+            'category_id' => 'sometimes|required|exists:categories,id',
             'description' => 'nullable|string',
             'duration' => 'sometimes|required|integer|min:1',
             'total_questions' => 'sometimes|required|integer|min:1',

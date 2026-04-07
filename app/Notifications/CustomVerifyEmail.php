@@ -18,11 +18,11 @@ class CustomVerifyEmail extends VerifyEmail
 
         return (new MailMessage)
             ->subject('📧 Verify Your Online Exam Account')
-            ->greeting('Hello ' . $notifiable->name . ',')
+            ->greeting('Hello '.$notifiable->name.',')
             ->line('Thank you for registering. Please verify your email address by clicking the button below:')
             ->action('Verify Email', $verificationUrl)
             ->line('If you did not create an account, no further action is required. ')
-            
+
             ->salutation('Thanks, Online Exam System Team');
     }
 
@@ -35,7 +35,7 @@ class CustomVerifyEmail extends VerifyEmail
             'verification.verify',
             Carbon::now()->addMinutes(60),
             [
-                'id'   => $notifiable->getKey(),
+                'id' => $notifiable->getKey(),
                 'hash' => sha1($notifiable->getEmailForVerification()),
             ]
         );
