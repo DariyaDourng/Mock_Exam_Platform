@@ -71,8 +71,24 @@ export default function StudentTest({ params }: { params: { id: string } }) {
   const [testData, setTestData] = useState<TestData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string | string[]>>({});
+  const [currentQuestion, setCurrentQuestion] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = localStorage.getItem(`exam_${params.id}_currentQuestion`);
+    if (saved) {
+      const idx = parseInt(saved, 10);
+      if (!isNaN(idx) && idx >= 0) return idx;
+    }
+    return 0;
+  });
+  // const [answers, setAnswers] = useState<Record<number, string | string[]>>({});
+  const [answers, setAnswers] = useState<Record<number, string | string[]>>(() => {
+  if (typeof window === "undefined") return {};
+  const saved = localStorage.getItem(`exam_${params.id}_answers`);
+  if (saved) {
+    try { return JSON.parse(saved); } catch { return {}; }
+  }
+  return {};
+});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<number, boolean>>({});
   const [timeLeft, setTimeLeft] = useState(0);
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -102,6 +118,17 @@ export default function StudentTest({ params }: { params: { id: string } }) {
 
         const durationSeconds = res.data.data.duration * 60;
         let storedStartTime = safeLocalStorage.getItem(startTimeKey);
+
+        // Reset start time if it's older than the exam duration (stale from a previous session)
+        if (storedStartTime) {
+          const age = Date.now() - parseInt(storedStartTime, 10);
+          const maxDuration = (res.data.data.duration + 5) * 60 * 1000;
+          if (age > maxDuration) {
+            storedStartTime = null;
+            safeLocalStorage.removeItem(startTimeKey);
+          }
+        }
+
         if (!storedStartTime) {
           storedStartTime = Date.now().toString();
           safeLocalStorage.setItem(startTimeKey, storedStartTime);
@@ -112,10 +139,10 @@ export default function StudentTest({ params }: { params: { id: string } }) {
         const remaining = durationSeconds - elapsedSeconds;
         setTimeLeft(remaining > 0 ? remaining : durationSeconds);
 
-        const savedAnswers = safeLocalStorage.getItem(answersKey);
-        if (savedAnswers) {
-          try { setAnswers(JSON.parse(savedAnswers)); } catch { setAnswers({}); }
-        }
+        // const savedAnswers = safeLocalStorage.getItem(answersKey);
+        // if (savedAnswers) {
+        //   try { setAnswers(JSON.parse(savedAnswers)); } catch { setAnswers({}); }
+        // }
 
         const savedCurrentQuestion = safeLocalStorage.getItem(currentQuestionKey);
         if (savedCurrentQuestion) {
@@ -123,8 +150,6 @@ export default function StudentTest({ params }: { params: { id: string } }) {
           if (!isNaN(idx) && idx >= 0 && idx < res.data.data.questions.length) {
             setCurrentQuestion(idx);
           }
-        } else {
-          setCurrentQuestion(0);
         }
 
         setLoading(false);
